@@ -1,4 +1,4 @@
-﻿#Requires -Version 5.1
+#Requires -Version 5.1
 <#
 .SYNOPSIS
     Portable Laravel Windows Distribution Builder v2.1.0
@@ -497,7 +497,8 @@ function New-LaravelApp {
     $phpIni   = Join-Path $PHP_DIR "php.ini"
     $composer = Join-Path $COMPOSER_DIR "composer.phar"
 
-    $env:XDEBUG_MODE = "off"
+    $env:XDEBUG_MODE      = "off"
+    $env:COMPOSER_CACHE_DIR = $CACHE
 
     # Composer refuses to create-project into an existing directory; remove if empty.
     if ((Test-Path $APP_DIR) -and (Get-ChildItem $APP_DIR | Measure-Object).Count -eq 0) {
@@ -511,7 +512,13 @@ function New-LaravelApp {
 
     if ($exitCode -ne 0) { throw "composer create-project failed (exit $exitCode)" }
 
-    $env:XDEBUG_MODE = $null
+    # Remove any .git directories left by source-fallback clones
+    Write-Info "Stripping .git directories from vendor..."
+    Get-ChildItem (Join-Path $APP_DIR "vendor") -Recurse -Force -Directory -Filter ".git" -ErrorAction SilentlyContinue |
+        ForEach-Object { Remove-Item $_.FullName -Recurse -Force -ErrorAction SilentlyContinue }
+
+    $env:XDEBUG_MODE        = $null
+    $env:COMPOSER_CACHE_DIR = $null
     Write-Ok "Laravel created at app\"
 }
 
@@ -531,7 +538,7 @@ function Configure-Laravel {
 
     $sqlite = Join-Path $DB_DIR "database.sqlite"
     if (-not (Test-Path $sqlite)) {
-        "" | Set-Content $sqlite
+        [System.IO.File]::WriteAllBytes($sqlite, [byte[]]@())
         Write-Ok "Created database\database.sqlite"
     }
 
@@ -567,17 +574,31 @@ function Configure-Laravel {
 function Install-NpmDependencies {
     Write-Phase "Installing Node.js dependencies"
 
-    $env:PATH = "$NODE_DIR;$env:PATH"
-    $env:npm_config_cache  = "$TEMP_DIR\npm-cache"
-    $env:npm_config_prefix = "$TEMP_DIR\npm-global"
+    $env:PATH               = "$NODE_DIR;$env:PATH"
+    $env:npm_config_cache   = "$TEMP_DIR\npm-cache"
+    $env:npm_config_prefix  = "$TEMP_DIR\npm-global"
 
-    Write-Info "Running npm install..."
     $prevLoc = Get-Location
     Set-Location $APP_DIR
+
+    Write-Info "Running npm install..."
     $exitCode = Invoke-Cmd "$NODE_DIR\npm.cmd" @("install")
-    Set-Location $prevLoc
     if ($exitCode -ne 0) { Write-Warn "npm install finished with warnings" }
-    Write-Ok "Node modules installed"
+
+    Write-Info "Building Vite production assets..."
+    $exitCode = Invoke-Cmd "$NODE_DIR\npm.cmd" @("run", "build")
+    if ($exitCode -ne 0) { Write-Warn "npm run build finished with warnings" }
+
+    Set-Location $prevLoc
+
+    # Clear npm cache and global dirs — not needed at runtime
+    Write-Info "Clearing npm build cache..."
+    @("$TEMP_DIR\npm-cache", "$TEMP_DIR\npm-global") | ForEach-Object {
+        if (Test-Path $_) { Remove-Item $_ -Recurse -Force -ErrorAction SilentlyContinue }
+        New-Item -ItemType Directory -Path $_ -Force | Out-Null
+    }
+
+    Write-Ok "Node modules installed and assets built"
 }
 
 # ============================================================
@@ -657,11 +678,7 @@ if not exist "%DB_DIR%"             mkdir "%DB_DIR%"
 if not exist "%DB_DIR%\database.sqlite" type nul > "%DB_DIR%\database.sqlite"
 
 :: Generate php.ini from template (resolves __LOGS__ and __TEMP__ at runtime)
-powershell -NoProfile -NonInteractive -Command ^
-  "(Get-Content '%PHP_DIR%\php.ini.template') ^
-   -replace '__LOGS__', '%LOGS_DIR:\=/%' ^
-   -replace '__TEMP__', '%TEMP_DIR:\=/%' ^
-   | Set-Content '%PHP_DIR%\php.ini'"
+powershell -NoProfile -NonInteractive -Command "(Get-Content '%PHP_DIR%\php.ini.template') -replace '__LOGS__', '%LOGS_DIR:\=/%' -replace '__TEMP__', '%TEMP_DIR:\=/%' | Set-Content '%PHP_DIR%\php.ini'"
 
 :: Portable PATH (our binaries first)
 set "PATH=%PHP_DIR%;%NODE_DIR%;%DIST_ROOT%;%PATH%"
@@ -740,6 +757,7 @@ echo.
 "%PHP_DIR%\php.exe" "%APP_DIR%\artisan" serve ^
     --host=%LARAVEL_HOST% ^
     --port=%LARAVEL_PORT% ^
+    --no-reload ^
     2>&1
 
 echo.
