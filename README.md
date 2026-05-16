@@ -37,6 +37,7 @@ No compilers, no root, no system packages — just `curl` and `tar`.
   - [Directory Structure](#directory-structure-linux)
   - [Launcher Scripts](#launcher-scripts-linux)
   - [Dev Shell](#dev-shell-linux)
+  - [IDE Setup](#ide-setup-linux)
   - [Vite / HMR](#vite--hmr-linux)
   - [Database](#database-linux)
   - [PHP Extensions](#php-extensions-linux)
@@ -48,6 +49,7 @@ No compilers, no root, no system packages — just `curl` and `tar`.
   - [Directory Structure](#directory-structure-windows)
   - [Launcher Scripts](#launcher-scripts-windows)
   - [Dev Shell](#dev-shell-windows)
+  - [IDE Setup](#ide-setup-windows)
   - [Vite / HMR](#vite--hmr-windows)
   - [Database](#database-windows)
   - [Xdebug](#xdebug-windows)
@@ -259,6 +261,106 @@ npm install some-package
 ```
 
 Type `exit` to leave the shell. All PATH changes are scoped to the session.
+
+---
+
+### IDE Setup (Linux)
+
+> **Always open the `app/` subfolder** in your IDE — not the distribution root.
+> The Laravel project, `.vscode/`, and all source files live there.
+
+```bash
+code app/          # VSCode
+phpstorm app/      # PHPStorm (if CLI launcher installed)
+cursor app/        # Cursor
+```
+
+---
+
+#### VSCode / Cursor
+
+`.vscode/` is pre-configured inside `app/`. On first open VSCode will prompt to install recommended extensions.
+
+**Recommended extensions** (from `.vscode/extensions.json`):
+
+| Extension | Purpose |
+|-----------|---------|
+| `bmewburn.vscode-intelephense-client` | PHP IntelliSense, go-to-definition |
+| `xdebug.php-debug` | Xdebug debugger (Windows only) |
+| `bradlc.vscode-tailwindcss` | Tailwind CSS IntelliSense |
+| `amirmarmul.laravel-blade-vscode` | Blade syntax |
+| `mikestead.dotenv` | `.env` syntax |
+| `mtxr.sqltools` + `mtxr.sqltools-driver-sqlite` | SQLite GUI browser |
+| `dbaeumer.vscode-eslint` | JS/TS linting |
+| `esbenp.prettier-vscode` | Code formatting |
+
+**PHP interpreter path for Intelephense** — add to `.vscode/settings.json` if auto-detection fails:
+
+```json
+{
+    "intelephense.environment.phpExecutable": "/absolute/path/to/portable-laravel-linux/php/bin/php"
+}
+```
+
+**SQLite database** — pre-configured in `.vscode/settings.json`:
+- Open the SQLTools panel → *Laravel SQLite* connection is already there.
+
+---
+
+#### PHPStorm / IntelliJ
+
+1. **Open project:** File → Open → select the `app/` directory
+2. **PHP interpreter:**
+   Settings → PHP → CLI Interpreters → `+` → **Other Local**
+   - PHP executable: `/path/to/portable-laravel-linux/php/bin/php`
+   - PHPStorm will detect the version automatically
+3. **Composer:**
+   Settings → PHP → Composer
+   - Execution: *Local*
+   - Path to `composer.phar`: `/path/to/portable-laravel-linux/composer/composer.phar`
+   - PHP interpreter: select the one configured above
+4. **Database:**
+   View → Tool Windows → Database → `+` → Data Source → SQLite
+   - File: `/path/to/portable-laravel-linux/database/database.sqlite`
+5. **Laravel plugin** (optional but recommended):
+   Settings → Plugins → search *Laravel* → install *Laravel* by Nikolay Mihalyov
+
+---
+
+#### Neovim (with LSP)
+
+Using [mason.nvim](https://github.com/williamboman/mason.nvim) + `intelephense`:
+
+```lua
+-- Point intelephense at the bundled PHP
+require("lspconfig").intelephense.setup({
+    init_options = {
+        globalStoragePath = vim.fn.expand("~/.local/share/intelephense"),
+    },
+    settings = {
+        intelephense = {
+            environment = {
+                phpVersion = "8.4.0",
+                -- optional: restrict include paths to the project
+            },
+        },
+    },
+})
+```
+
+Set `$PHP_EXECUTABLE` before launching Neovim if needed:
+
+```bash
+PHP_EXECUTABLE=/path/to/portable-laravel-linux/php/bin/php nvim app/
+```
+
+---
+
+#### Sublime Text
+
+1. Install [LSP](https://packagecontrol.io/packages/LSP) + [LSP-intelephense](https://packagecontrol.io/packages/LSP-intelephense)
+2. Open `app/` as a project: Project → Add Folder to Project
+3. In LSP settings point `phpExecutable` to `portable-laravel-linux/php/bin/php`
 
 ---
 
@@ -488,6 +590,108 @@ Type `exit` to leave the shell.
 
 ---
 
+### IDE Setup (Windows)
+
+> **Always open the `app\` subfolder** in your IDE — not the distribution root.
+> The Laravel project, `.vscode\`, and all source files live there.
+
+```powershell
+code app\          # VSCode
+phpstorm app\      # PHPStorm (if CLI launcher installed)
+cursor app\        # Cursor
+```
+
+---
+
+#### VSCode / Cursor
+
+`.vscode\` is pre-configured inside `app\`. On first open VSCode will prompt to install recommended extensions.
+
+**Recommended extensions** (from `.vscode\extensions.json`):
+
+| Extension | Purpose |
+|-----------|---------|
+| `bmewburn.vscode-intelephense-client` | PHP IntelliSense, go-to-definition |
+| `xdebug.php-debug` | Xdebug debugger (pre-configured on Windows) |
+| `bradlc.vscode-tailwindcss` | Tailwind CSS IntelliSense |
+| `amirmarmul.laravel-blade-vscode` | Blade syntax |
+| `mikestead.dotenv` | `.env` syntax |
+| `mtxr.sqltools` + `mtxr.sqltools-driver-sqlite` | SQLite GUI browser |
+| `dbaeumer.vscode-eslint` | JS/TS linting |
+| `esbenp.prettier-vscode` | Code formatting |
+
+**Xdebug** is pre-configured — press **F5** in VSCode → *Listen for Xdebug*, then open `http://127.0.0.1:8080`.
+
+**PHP interpreter path for Intelephense** — add to `.vscode\settings.json` if auto-detection fails:
+
+```json
+{
+    "intelephense.environment.phpExecutable": "C:\\path\\to\\portable-laravel-windows\\php\\php.exe"
+}
+```
+
+**SQLite database** — pre-configured in `.vscode\settings.json`:
+- Open the SQLTools panel → *Laravel SQLite* connection is already there.
+
+---
+
+#### PHPStorm / IntelliJ
+
+1. **Open project:** File → Open → select the `app\` directory
+2. **PHP interpreter:**
+   Settings → PHP → CLI Interpreters → `+` → **Other Local**
+   - PHP executable: `C:\path\to\portable-laravel-windows\php\php.exe`
+   - PHPStorm will detect version and Xdebug automatically
+3. **Composer:**
+   Settings → PHP → Composer
+   - Execution: *Local*
+   - Path to `composer.phar`: `C:\path\to\portable-laravel-windows\composer\composer.phar`
+   - PHP interpreter: select the one configured above
+4. **Xdebug:**
+   Settings → PHP → Debug → Xdebug section → Debug port: **9003**
+   Settings → PHP → Servers → `+` → Host: `127.0.0.1`, Port: `8080`
+   Click the **phone icon** in the toolbar to start listening.
+5. **Database:**
+   View → Tool Windows → Database → `+` → Data Source → SQLite
+   - File: `C:\path\to\portable-laravel-windows\database\database.sqlite`
+6. **Laravel plugin** (optional but recommended):
+   Settings → Plugins → search *Laravel* → install *Laravel* by Nikolay Mihalyov
+
+---
+
+#### Neovim (with LSP)
+
+Using [mason.nvim](https://github.com/williamboman/mason.nvim) + `intelephense`:
+
+```lua
+require("lspconfig").intelephense.setup({
+    settings = {
+        intelephense = {
+            environment = {
+                phpVersion = "8.4.0",
+            },
+        },
+    },
+})
+```
+
+Launch Neovim pointing at the bundled PHP:
+
+```powershell
+$env:PHP_EXECUTABLE = "C:\path\to\portable-laravel-windows\php\php.exe"
+nvim app\
+```
+
+---
+
+#### Sublime Text
+
+1. Install [LSP](https://packagecontrol.io/packages/LSP) + [LSP-intelephense](https://packagecontrol.io/packages/LSP-intelephense)
+2. Open `app\` as a project: Project → Add Folder to Project
+3. In LSP settings point `phpExecutable` to `portable-laravel-windows\php\php.exe`
+
+---
+
 ### Vite / HMR (Windows)
 
 Production assets are pre-built during the build step (`npm run build`).
@@ -610,6 +814,7 @@ Download matching Xdebug DLL from https://xdebug.org, place in `php\ext\php_xdeb
   - [Estrutura de Diretórios](#estrutura-de-diretórios-linux)
   - [Scripts de Inicialização](#scripts-de-inicialização-linux)
   - [Shell de Desenvolvimento](#shell-de-desenvolvimento-linux)
+  - [Configuração de IDE](#configuração-de-ide-linux)
   - [Vite / HMR](#vite--hmr-linux-1)
   - [Banco de Dados](#banco-de-dados-linux)
   - [Extensões PHP](#extensões-php-linux)
@@ -621,6 +826,7 @@ Download matching Xdebug DLL from https://xdebug.org, place in `php\ext\php_xdeb
   - [Estrutura de Diretórios](#estrutura-de-diretórios-windows)
   - [Scripts de Inicialização](#scripts-de-inicialização-windows)
   - [Shell de Desenvolvimento](#shell-de-desenvolvimento-windows)
+  - [Configuração de IDE](#configuração-de-ide-windows)
   - [Vite / HMR](#vite--hmr-windows-1)
   - [Banco de Dados](#banco-de-dados-windows)
   - [Xdebug](#xdebug-windows-1)
@@ -834,6 +1040,101 @@ npm install algum-pacote
 ```
 
 Digite `exit` para sair. Todas as alterações no PATH ficam restritas à sessão.
+
+---
+
+### Configuração de IDE (Linux)
+
+> **Sempre abra a subpasta `app/`** na sua IDE — não a raiz da distribuição.
+> O projeto Laravel, o `.vscode/` e todos os arquivos-fonte ficam lá.
+
+```bash
+code app/          # VSCode
+phpstorm app/      # PHPStorm (se o launcher CLI estiver instalado)
+cursor app/        # Cursor
+```
+
+---
+
+#### VSCode / Cursor
+
+`.vscode/` está pré-configurado dentro de `app/`. Na primeira abertura, o VSCode sugerirá instalar as extensões recomendadas.
+
+**Extensões recomendadas** (via `.vscode/extensions.json`):
+
+| Extensão | Finalidade |
+|----------|-----------|
+| `bmewburn.vscode-intelephense-client` | PHP IntelliSense, ir para definição |
+| `xdebug.php-debug` | Depurador Xdebug (apenas Windows) |
+| `bradlc.vscode-tailwindcss` | Tailwind CSS IntelliSense |
+| `amirmarmul.laravel-blade-vscode` | Sintaxe Blade |
+| `mikestead.dotenv` | Sintaxe `.env` |
+| `mtxr.sqltools` + `mtxr.sqltools-driver-sqlite` | Navegador SQLite visual |
+| `dbaeumer.vscode-eslint` | Lint JS/TS |
+| `esbenp.prettier-vscode` | Formatação de código |
+
+**Caminho do PHP para o Intelephense** — adicione ao `.vscode/settings.json` se a detecção automática falhar:
+
+```json
+{
+    "intelephense.environment.phpExecutable": "/caminho/absoluto/para/portable-laravel-linux/php/bin/php"
+}
+```
+
+**Banco de dados SQLite** — pré-configurado em `.vscode/settings.json`:
+- Abra o painel SQLTools → a conexão *Laravel SQLite* já está disponível.
+
+---
+
+#### PHPStorm / IntelliJ
+
+1. **Abrir projeto:** File → Open → selecione o diretório `app/`
+2. **Interpretador PHP:**
+   Settings → PHP → CLI Interpreters → `+` → **Other Local**
+   - PHP executable: `/caminho/para/portable-laravel-linux/php/bin/php`
+   - O PHPStorm detecta a versão automaticamente
+3. **Composer:**
+   Settings → PHP → Composer
+   - Execution: *Local*
+   - Path to `composer.phar`: `/caminho/para/portable-laravel-linux/composer/composer.phar`
+   - PHP interpreter: selecione o configurado acima
+4. **Banco de dados:**
+   View → Tool Windows → Database → `+` → Data Source → SQLite
+   - File: `/caminho/para/portable-laravel-linux/database/database.sqlite`
+5. **Plugin Laravel** (opcional, mas recomendado):
+   Settings → Plugins → pesquise *Laravel* → instale *Laravel* de Nikolay Mihalyov
+
+---
+
+#### Neovim (com LSP)
+
+Usando [mason.nvim](https://github.com/williamboman/mason.nvim) + `intelephense`:
+
+```lua
+require("lspconfig").intelephense.setup({
+    settings = {
+        intelephense = {
+            environment = {
+                phpVersion = "8.4.0",
+            },
+        },
+    },
+})
+```
+
+Se necessário, defina `$PHP_EXECUTABLE` antes de abrir o Neovim:
+
+```bash
+PHP_EXECUTABLE=/caminho/para/portable-laravel-linux/php/bin/php nvim app/
+```
+
+---
+
+#### Sublime Text
+
+1. Instale [LSP](https://packagecontrol.io/packages/LSP) + [LSP-intelephense](https://packagecontrol.io/packages/LSP-intelephense)
+2. Abra `app/` como projeto: Project → Add Folder to Project
+3. Nas configurações do LSP, aponte `phpExecutable` para `portable-laravel-linux/php/bin/php`
 
 ---
 
@@ -1062,6 +1363,106 @@ npm install algum-pacote
 ```
 
 Digite `exit` para sair.
+
+---
+
+### Configuração de IDE (Windows)
+
+> **Sempre abra a subpasta `app\`** na sua IDE — não a raiz da distribuição.
+> O projeto Laravel, o `.vscode\` e todos os arquivos-fonte ficam lá.
+
+```powershell
+code app\          # VSCode
+phpstorm app\      # PHPStorm (se o launcher CLI estiver instalado)
+cursor app\        # Cursor
+```
+
+---
+
+#### VSCode / Cursor
+
+`.vscode\` está pré-configurado dentro de `app\`. Na primeira abertura, o VSCode sugerirá instalar as extensões recomendadas.
+
+**Extensões recomendadas** (via `.vscode\extensions.json`):
+
+| Extensão | Finalidade |
+|----------|-----------|
+| `bmewburn.vscode-intelephense-client` | PHP IntelliSense, ir para definição |
+| `xdebug.php-debug` | Depurador Xdebug (pré-configurado no Windows) |
+| `bradlc.vscode-tailwindcss` | Tailwind CSS IntelliSense |
+| `amirmarmul.laravel-blade-vscode` | Sintaxe Blade |
+| `mikestead.dotenv` | Sintaxe `.env` |
+| `mtxr.sqltools` + `mtxr.sqltools-driver-sqlite` | Navegador SQLite visual |
+| `dbaeumer.vscode-eslint` | Lint JS/TS |
+| `esbenp.prettier-vscode` | Formatação de código |
+
+**Xdebug** pré-configurado — pressione **F5** no VSCode → *Listen for Xdebug*, depois acesse `http://127.0.0.1:8080`.
+
+**Caminho do PHP para o Intelephense** — adicione ao `.vscode\settings.json` se a detecção automática falhar:
+
+```json
+{
+    "intelephense.environment.phpExecutable": "C:\\caminho\\para\\portable-laravel-windows\\php\\php.exe"
+}
+```
+
+**Banco de dados SQLite** — pré-configurado em `.vscode\settings.json`:
+- Abra o painel SQLTools → a conexão *Laravel SQLite* já está disponível.
+
+---
+
+#### PHPStorm / IntelliJ
+
+1. **Abrir projeto:** File → Open → selecione o diretório `app\`
+2. **Interpretador PHP:**
+   Settings → PHP → CLI Interpreters → `+` → **Other Local**
+   - PHP executable: `C:\caminho\para\portable-laravel-windows\php\php.exe`
+   - O PHPStorm detecta a versão e o Xdebug automaticamente
+3. **Composer:**
+   Settings → PHP → Composer
+   - Execution: *Local*
+   - Path to `composer.phar`: `C:\caminho\para\portable-laravel-windows\composer\composer.phar`
+   - PHP interpreter: selecione o configurado acima
+4. **Xdebug:**
+   Settings → PHP → Debug → Xdebug → Debug port: **9003**
+   Settings → PHP → Servers → `+` → Host: `127.0.0.1`, Port: `8080`
+   Clique no **ícone de telefone** na barra de ferramentas para começar a escutar.
+5. **Banco de dados:**
+   View → Tool Windows → Database → `+` → Data Source → SQLite
+   - File: `C:\caminho\para\portable-laravel-windows\database\database.sqlite`
+6. **Plugin Laravel** (opcional, mas recomendado):
+   Settings → Plugins → pesquise *Laravel* → instale *Laravel* de Nikolay Mihalyov
+
+---
+
+#### Neovim (com LSP)
+
+Usando [mason.nvim](https://github.com/williamboman/mason.nvim) + `intelephense`:
+
+```lua
+require("lspconfig").intelephense.setup({
+    settings = {
+        intelephense = {
+            environment = {
+                phpVersion = "8.4.0",
+            },
+        },
+    },
+})
+```
+
+```powershell
+$env:PHP_EXECUTABLE = "C:\caminho\para\portable-laravel-windows\php\php.exe"
+nvim app\
+```
+
+---
+
+#### Sublime Text
+
+1. Instale [LSP](https://packagecontrol.io/packages/LSP) + [LSP-intelephense](https://packagecontrol.io/packages/LSP-intelephense)
+2. Abra `app\` como projeto: Project → Add Folder to Project
+3. Nas configurações do LSP, aponte `phpExecutable` para `portable-laravel-windows\php\php.exe`
 
 ---
 
