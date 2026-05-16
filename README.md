@@ -11,6 +11,8 @@ No compilers, no root, no system packages — just `curl` and `tar`.
 
 > **Portaravel** = *Porta* (🇧🇷 door) + *Portable* + *Laravel*
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-red.svg)](LICENSE)
+
 ---
 
 ### One-liner install & run
@@ -27,7 +29,30 @@ irm https://github.com/ensismoebius/portaravel/releases/latest/download/portable
 
 ---
 
-[Linux](#linux) · [Windows](#windows) · [Comparative](#comparative)
+## Table of Contents
+
+- [One-liner install & run](#one-liner-install--run)
+- [Linux](#linux)
+  - [Quick Start](#quick-start)
+  - [Building](#building-linux)
+  - [Directory Structure](#directory-structure-linux)
+  - [Launcher Scripts](#launcher-scripts-linux)
+  - [Vite / HMR](#vite--hmr-linux)
+  - [Database](#database-linux)
+  - [PHP Extensions](#php-extensions-linux)
+  - [Troubleshooting](#troubleshooting-linux)
+  - [Updating](#updating-linux)
+- [Windows](#windows)
+  - [Quick Start](#quick-start-1)
+  - [Building](#building-windows)
+  - [Directory Structure](#directory-structure-windows)
+  - [Launcher Scripts](#launcher-scripts-windows)
+  - [Vite / HMR](#vite--hmr-windows)
+  - [Database](#database-windows)
+  - [Xdebug](#xdebug-windows)
+  - [Troubleshooting](#troubleshooting-windows)
+  - [Updating](#updating-windows)
+- [Comparative](#comparative)
 
 ---
 
