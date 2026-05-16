@@ -101,12 +101,18 @@ download() {
         return 0
     fi
     info "Downloading $label ..."
-    if curl -fSL --progress-bar "$url" -o "$dest"; then
+    if command -v wget &>/dev/null; then
+        if wget -c --retry-connrefused --tries=10 --waitretry=5 -q --show-progress "$url" -O "$dest"; then
+            ok "Downloaded: $label"
+            return 0
+        fi
+    fi
+    if curl -fSL --retry 5 --retry-delay 3 --retry-connrefused --progress-bar "$url" -o "$dest"; then
         ok "Downloaded: $label"
         return 0
-    else
-        return 1
     fi
+    rm -f "$dest"
+    return 1
 }
 
 # ---------------------------------------------------------------
@@ -549,6 +555,15 @@ TEMP_DIR="$DIST_ROOT/temp"
 mkdir -p "$LOGS_DIR" "$TEMP_DIR" "$TEMP_DIR/sessions" "$DB_DIR" \
          "$TEMP_DIR/npm-cache" "$TEMP_DIR/npm-global"
 [[ -f "$DB_DIR/database.sqlite" ]] || touch "$DB_DIR/database.sqlite"
+
+# Patch .env DB_DATABASE to current runtime absolute path (handles relocation after extraction)
+if [[ -f "$APP_DIR/.env" ]]; then
+    sed -i "s|^DB_DATABASE=.*|DB_DATABASE=$DB_DIR/database.sqlite|" "$APP_DIR/.env"
+fi
+
+# Clear bootstrap config/route cache (may contain stale build-time absolute paths)
+rm -f "$APP_DIR/bootstrap/cache/config.php" \
+      "$APP_DIR/bootstrap/cache/routes-v7.php"
 
 # Regenerate php.ini from template (resolves __LOGS__, __TEMP__)
 sed \
