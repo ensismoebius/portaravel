@@ -519,6 +519,59 @@ function New-LaravelApp {
 
     $env:XDEBUG_MODE        = $null
     $env:COMPOSER_CACHE_DIR = $null
+
+    # Patch vite.config.js for Windows portability:
+    #   - Bind to 127.0.0.1 (not 'localhost' which may fail DNS on some machines)
+    #   - Explicit HMR host/port so the browser WebSocket connects correctly
+    #   - usePolling for reliable file-change detection on Windows
+    Write-Info "Patching vite.config.js for Windows HMR compatibility..."
+    $viteCfg = Join-Path $APP_DIR "vite.config.js"
+    $viteContent = @'
+import { defineConfig } from 'vite';
+import laravel from 'laravel-vite-plugin';
+import tailwindcss from '@tailwindcss/vite';
+
+export default defineConfig({
+    plugins: [
+        laravel({
+            input: ['resources/css/app.css', 'resources/js/app.js'],
+            refresh: true,
+        }),
+        tailwindcss(),
+    ],
+    server: {
+        // Bind explicitly to 127.0.0.1 — 'localhost' has DNS resolution
+        // issues on some Windows machines (getaddrinfo failure).
+        host: '127.0.0.1',
+        port: 5173,
+
+        // Only set the HMR host — DO NOT hardcode hmr.port.
+        // If Vite falls back to a different port (due to a port conflict
+        // from an orphaned node.exe), the HMR WebSocket must use that same
+        // port.  Vite derives it automatically from server.port when
+        // hmr.port is omitted.
+        hmr: {
+            host: '127.0.0.1',
+        },
+
+        watch: {
+            // Use polling as a fallback for Windows file systems that do
+            // not fire native FSEvents reliably (network drives, some NTFS
+            // configurations, WSL mounts, etc.).
+            usePolling: true,
+            interval: 300,
+        },
+
+        // Allow requests coming from the artisan serve origin (:8080)
+        cors: {
+            origin: 'http://127.0.0.1:8080',
+        },
+    },
+});
+'@
+    $viteContent | Set-Content $viteCfg -Encoding UTF8
+    Write-Ok "vite.config.js patched"
+
     Write-Ok "Laravel created at app\"
 }
 
@@ -713,8 +766,8 @@ set "LARAVEL_URL=http://%LARAVEL_HOST%:%LARAVEL_PORT%"
 setlocal EnableExtensions
 
 :: ============================================================
-:: Portable Laravel – run.bat
-:: Starts php artisan serve and opens the browser.
+:: Portable Laravel - run.bat
+:: Starts Vite HMR + php artisan serve and opens the browser.
 :: ============================================================
 
 set "DIST_ROOT=%~dp0"
@@ -727,12 +780,12 @@ echo  ===========================================================
 echo   Portable Laravel Development Environment
 echo  ===========================================================
 echo.
-echo   PHP:      %PHP_DIR%\php.exe
-echo   Node:     %NODE_DIR%\node.exe
-echo   App:      %APP_DIR%
-echo   DB:       %DB_DATABASE%
-echo   URL:      %LARAVEL_URL%
-echo   Logs:     %LOGS_DIR%
+echo   PHP:     %PHP_DIR%\php.exe
+echo   Node:    %NODE_DIR%\node.exe
+echo   App:     %APP_DIR%
+echo   DB:      %DB_DATABASE%
+echo   URL:     %LARAVEL_URL%
+echo   Vite:    http://127.0.0.1:5173  (hot reload)
 echo.
 echo  ===========================================================
 echo.
@@ -742,26 +795,53 @@ if not exist "%PHP_DIR%\php.exe" (
     pause & exit /b 1
 )
 
-:: Run database migrations
+:: -- Clean up any leftover processes from a previous run ------------------
+for /f "tokens=5" %%a in ('netstat -aon 2^>nul ^| findstr ":5173 "') do (
+    taskkill /PID %%a /F >nul 2>&1
+)
+for /f "tokens=5" %%a in ('netstat -aon 2^>nul ^| findstr ":8080 "') do (
+    taskkill /PID %%a /F >nul 2>&1
+)
+
+:: -- Migrations -----------------------------------------------------------
 echo Running migrations...
 "%PHP_DIR%\php.exe" "%APP_DIR%\artisan" migrate --force 2>>"%LOGS_DIR%\artisan.log"
 
-:: Open browser after short delay (background, minimised)
-start "" /MIN cmd /c "timeout /t 3 /nobreak >nul & start "" %LARAVEL_URL%"
+:: -- Write public/hot so Laravel serves assets from the Vite dev server --
+echo http://127.0.0.1:5173> "%APP_DIR%\public\hot"
 
-:: Start Laravel built-in server (foreground)
-echo Starting Laravel server on %LARAVEL_URL% ...
-echo Press Ctrl+C to stop.
+:: -- Start Vite in a separate window --------------------------------------
+:: The window stays open so you can see HMR output and errors.
+:: It cleans up public/hot automatically when it exits.
+start "Vite HMR :5173" cmd /c ^
+    "cd /d "%APP_DIR%" && "%NODE_DIR%\npm.cmd" run dev & del /f /q "%APP_DIR%\public\hot" 2>nul"
+
+echo  Vite HMR starting in background window...
+echo  Laravel starting on %LARAVEL_URL% ...
+echo  Browser opens in a few seconds.
+echo.
+echo  Press Ctrl+C to stop Laravel.
+echo  Run stop.bat to stop everything (Laravel + Vite).
 echo.
 
+:: -- Open browser after a short delay -------------------------------------
+start "" /MIN cmd /c "timeout /t 4 /nobreak >nul & start "" %LARAVEL_URL%"
+
+:: -- Start Laravel in the foreground (Ctrl+C to stop) --------------------
 "%PHP_DIR%\php.exe" "%APP_DIR%\artisan" serve ^
     --host=%LARAVEL_HOST% ^
     --port=%LARAVEL_PORT% ^
     --no-reload ^
     2>&1
 
+:: -- Cleanup when Laravel stops -------------------------------------------
 echo.
-echo Server stopped.
+echo Stopping Vite...
+for /f "tokens=5" %%a in ('netstat -aon 2^>nul ^| findstr ":5173 "') do (
+    taskkill /PID %%a /F >nul 2>&1
+)
+if exist "%APP_DIR%\public\hot" del /f /q "%APP_DIR%\public\hot"
+echo All stopped.
 pause
 endlocal
 '@
@@ -853,9 +933,44 @@ setlocal
 set "DIST_ROOT=%~dp0"
 set "DIST_ROOT=%DIST_ROOT:~0,-1%"
 call "%DIST_ROOT%\_env.bat"
-echo Starting Vite development server (hot reload)...
+
+echo.
+echo  ===========================================================
+echo   Vite HMR Dev Server
+echo  ===========================================================
+echo.
+echo   Keep run.bat open in another window.
+echo   Vite runs on http://127.0.0.1:5173
+echo   Edit files in app\resources\ for live hot-reload.
+echo.
+echo   Press Ctrl+C to stop.
+echo  ===========================================================
+echo.
+
+:: Kill any orphaned node.exe that may still be holding port 5173
+:: from a previous Vite run that was not stopped cleanly.
+:: This ensures Vite always binds to 5173 so the HMR WebSocket port
+:: stays consistent (vite.config.js does not hardcode hmr.port).
+for /f "tokens=5" %%a in ('netstat -aon 2^>nul ^| findstr ":5173 "') do (
+    taskkill /PID %%a /F >nul 2>&1
+)
+
+:: Write public/hot so Laravel switches from pre-built assets to the Vite
+:: dev server. Laravel only checks file existence + reads the URL.
+echo http://127.0.0.1:5173> "%APP_DIR%\public\hot"
+echo [Vite] Hot file written - Laravel is now using the dev server.
+
 cd /d "%APP_DIR%"
 "%NODE_DIR%\npm.cmd" run dev
+
+:: When Vite stops (Ctrl+C or natural exit), clean up the hot file so
+:: Laravel falls back to the pre-built assets in public/build/.
+echo.
+if exist "%APP_DIR%\public\hot" (
+    del /f /q "%APP_DIR%\public\hot"
+    echo [Vite] Hot file removed - Laravel reverted to production build.
+)
+
 endlocal
 '@ | Set-Content (Join-Path $DIST "vite.bat") -Encoding ASCII
 
