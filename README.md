@@ -36,6 +36,7 @@ No compilers, no root, no system packages — just `curl` and `tar`.
   - [Building](#building-linux)
   - [Directory Structure](#directory-structure-linux)
   - [Launcher Scripts](#launcher-scripts-linux)
+  - [Dev Shell](#dev-shell-linux)
   - [Vite / HMR](#vite--hmr-linux)
   - [Database](#database-linux)
   - [PHP Extensions](#php-extensions-linux)
@@ -46,6 +47,7 @@ No compilers, no root, no system packages — just `curl` and `tar`.
   - [Building](#building-windows)
   - [Directory Structure](#directory-structure-windows)
   - [Launcher Scripts](#launcher-scripts-windows)
+  - [Dev Shell](#dev-shell-windows)
   - [Vite / HMR](#vite--hmr-windows)
   - [Database](#database-windows)
   - [Xdebug](#xdebug-windows)
@@ -190,6 +192,73 @@ LARAVEL_PORT=9090 ./run.sh
 ./run.sh       # Terminal 1
 ./vite.sh      # Terminal 2
 ```
+
+---
+
+### Dev Shell (Linux)
+
+`./shell.sh` drops you into an isolated bash session with all bundled tools wired up — no system PHP, no system Node, no system Composer bleeds in.
+
+**What's available:**
+
+| Command | Resolves to |
+|---------|------------|
+| `php` | `php/bin/php` (bundled static binary) |
+| `composer` | alias → bundled PHP + `composer/composer.phar` |
+| `artisan` | alias → bundled PHP + `app/artisan` |
+| `npm` | `node/bin/npm` |
+| `npx` | `node/bin/npx` |
+| `node` | `node/bin/node` |
+
+**Environment pre-set:**
+
+- Working directory: `app/` (Laravel root)
+- `DB_DATABASE` → absolute path to `database/database.sqlite`
+- `PHPRC` → `php/` (prevents system php.ini from loading)
+- `PHP_INI_SCAN_DIR` → empty (no extra ini files)
+- `npm_config_cache` / `npm_config_prefix` → isolated inside `temp/`
+
+**Note:** `artisan` and `composer` are bash functions — type them without `.sh`:
+
+```bash
+./shell.sh
+
+# scaffold
+artisan make:model Post --migration --controller --resource
+artisan make:middleware EnsureUserIsAdmin
+artisan make:job ProcessPayment
+artisan make:event OrderShipped
+artisan make:listener SendOrderNotification --event=OrderShipped
+
+# database
+artisan migrate
+artisan migrate:fresh --seed
+artisan db:seed --class=UserSeeder
+artisan tinker
+
+# routing & inspection
+artisan route:list --except-vendor
+artisan config:show database
+artisan about
+
+# queues & cache
+artisan queue:work
+artisan cache:clear
+artisan config:clear
+artisan view:clear
+
+# packages
+composer require spatie/laravel-permission
+composer require --dev barryvdh/laravel-debugbar
+composer dump-autoload -o
+
+# frontend
+npm run dev       # Vite dev server (hot reload)
+npm run build     # production assets
+npm install some-package
+```
+
+Type `exit` to leave the shell. All PATH changes are scoped to the session.
 
 ---
 
@@ -364,6 +433,61 @@ portable-laravel-windows/
 
 ---
 
+### Dev Shell (Windows)
+
+`shell.bat` opens a CMD session with all bundled tools in PATH — no system PHP, no system Node, no system Composer bleeds in.
+
+**What's available:**
+
+| Command | Resolves to |
+|---------|------------|
+| `php` | `php\php.exe` (bundled binary) |
+| `composer` | alias → bundled PHP + `composer\composer.phar` |
+| `artisan` | alias → bundled PHP + `app\artisan` |
+| `npm` | `node\npm.cmd` |
+| `npx` | `node\npx.cmd` |
+| `node` | `node\node.exe` |
+
+**Environment pre-set:**
+
+- Working directory: `app\` (Laravel root)
+- `DB_DATABASE` → absolute path to `database\database.sqlite`
+- `PHPRC` → `php\` (prevents system php.ini from loading)
+- `npm_config_cache` / `npm_config_prefix` → isolated inside `temp\`
+
+```cmd
+shell.bat
+
+REM scaffold
+artisan make:model Post --migration --controller --resource
+artisan make:middleware EnsureUserIsAdmin
+artisan make:job ProcessPayment
+
+REM database
+artisan migrate
+artisan migrate:fresh --seed
+artisan tinker
+
+REM routing & inspection
+artisan route:list --except-vendor
+artisan config:show database
+artisan about
+
+REM packages
+composer require spatie/laravel-permission
+composer require --dev barryvdh/laravel-debugbar
+composer dump-autoload -o
+
+REM frontend
+npm run dev
+npm run build
+npm install some-package
+```
+
+Type `exit` to leave the shell.
+
+---
+
 ### Vite / HMR (Windows)
 
 Production assets are pre-built during the build step (`npm run build`).
@@ -485,6 +609,7 @@ Download matching Xdebug DLL from https://xdebug.org, place in `php\ext\php_xdeb
   - [Compilando o Projeto](#compilando-o-projeto-linux)
   - [Estrutura de Diretórios](#estrutura-de-diretórios-linux)
   - [Scripts de Inicialização](#scripts-de-inicialização-linux)
+  - [Shell de Desenvolvimento](#shell-de-desenvolvimento-linux)
   - [Vite / HMR](#vite--hmr-linux-1)
   - [Banco de Dados](#banco-de-dados-linux)
   - [Extensões PHP](#extensões-php-linux)
@@ -495,6 +620,7 @@ Download matching Xdebug DLL from https://xdebug.org, place in `php\ext\php_xdeb
   - [Compilando o Projeto](#compilando-o-projeto-windows)
   - [Estrutura de Diretórios](#estrutura-de-diretórios-windows)
   - [Scripts de Inicialização](#scripts-de-inicialização-windows)
+  - [Shell de Desenvolvimento](#shell-de-desenvolvimento-windows)
   - [Vite / HMR](#vite--hmr-windows-1)
   - [Banco de Dados](#banco-de-dados-windows)
   - [Xdebug](#xdebug-windows-1)
@@ -641,6 +767,73 @@ LARAVEL_PORT=9090 ./run.sh
 ./run.sh       # Terminal 1
 ./vite.sh      # Terminal 2
 ```
+
+---
+
+### Shell de Desenvolvimento (Linux)
+
+`./shell.sh` abre uma sessão bash isolada com todas as ferramentas do pacote configuradas — sem PHP do sistema, sem Node do sistema, sem Composer do sistema.
+
+**Disponível:**
+
+| Comando | Resolve para |
+|---------|-------------|
+| `php` | `php/bin/php` (binário estático do pacote) |
+| `composer` | alias → PHP do pacote + `composer/composer.phar` |
+| `artisan` | alias → PHP do pacote + `app/artisan` |
+| `npm` | `node/bin/npm` |
+| `npx` | `node/bin/npx` |
+| `node` | `node/bin/node` |
+
+**Ambiente pré-configurado:**
+
+- Diretório de trabalho: `app/` (raiz do Laravel)
+- `DB_DATABASE` → caminho absoluto para `database/database.sqlite`
+- `PHPRC` → `php/` (impede carregamento do php.ini do sistema)
+- `PHP_INI_SCAN_DIR` → vazio (sem arquivos ini extras)
+- `npm_config_cache` / `npm_config_prefix` → isolados dentro de `temp/`
+
+**Obs.:** `artisan` e `composer` são funções bash — digite sem `.sh`:
+
+```bash
+./shell.sh
+
+# scaffolding
+artisan make:model Post --migration --controller --resource
+artisan make:middleware EnsureUserIsAdmin
+artisan make:job ProcessPayment
+artisan make:event OrderShipped
+artisan make:listener SendOrderNotification --event=OrderShipped
+
+# banco de dados
+artisan migrate
+artisan migrate:fresh --seed
+artisan db:seed --class=UserSeeder
+artisan tinker
+
+# rotas e inspeção
+artisan route:list --except-vendor
+artisan config:show database
+artisan about
+
+# filas e cache
+artisan queue:work
+artisan cache:clear
+artisan config:clear
+artisan view:clear
+
+# pacotes
+composer require spatie/laravel-permission
+composer require --dev barryvdh/laravel-debugbar
+composer dump-autoload -o
+
+# frontend
+npm run dev       # servidor Vite dev (hot reload)
+npm run build     # assets de produção
+npm install algum-pacote
+```
+
+Digite `exit` para sair. Todas as alterações no PATH ficam restritas à sessão.
 
 ---
 
@@ -814,6 +1007,61 @@ portable-laravel-windows/
 | `composer.bat` | Atalho para o Composer |
 | `npm.bat` | Atalho para o npm |
 | `stop.bat` | Encerra o servidor e o Vite por porta |
+
+---
+
+### Shell de Desenvolvimento (Windows)
+
+`shell.bat` abre uma sessão CMD com todas as ferramentas do pacote no PATH — sem PHP do sistema, sem Node do sistema, sem Composer do sistema.
+
+**Disponível:**
+
+| Comando | Resolve para |
+|---------|-------------|
+| `php` | `php\php.exe` (binário do pacote) |
+| `composer` | alias → PHP do pacote + `composer\composer.phar` |
+| `artisan` | alias → PHP do pacote + `app\artisan` |
+| `npm` | `node\npm.cmd` |
+| `npx` | `node\npx.cmd` |
+| `node` | `node\node.exe` |
+
+**Ambiente pré-configurado:**
+
+- Diretório de trabalho: `app\` (raiz do Laravel)
+- `DB_DATABASE` → caminho absoluto para `database\database.sqlite`
+- `PHPRC` → `php\` (impede carregamento do php.ini do sistema)
+- `npm_config_cache` / `npm_config_prefix` → isolados dentro de `temp\`
+
+```cmd
+shell.bat
+
+REM scaffolding
+artisan make:model Post --migration --controller --resource
+artisan make:middleware EnsureUserIsAdmin
+artisan make:job ProcessPayment
+
+REM banco de dados
+artisan migrate
+artisan migrate:fresh --seed
+artisan tinker
+
+REM rotas e inspeção
+artisan route:list --except-vendor
+artisan config:show database
+artisan about
+
+REM pacotes
+composer require spatie/laravel-permission
+composer require --dev barryvdh/laravel-debugbar
+composer dump-autoload -o
+
+REM frontend
+npm run dev
+npm run build
+npm install algum-pacote
+```
+
+Digite `exit` para sair.
 
 ---
 
