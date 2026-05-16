@@ -9,7 +9,7 @@
 ---
 
 <div align="center">
-  <img src="mascot.svg" width="180" alt="Portaravel mascot – a cheerful red door on wheels holding a terminal"/>
+  <img src="mascot.svg" width="400" alt="Portaravel mascot – a cheerful red door on wheels holding a terminal"/>
 </div>
 
 > **Extract. Run. Code.** No installation, no admin rights, no system changes.
