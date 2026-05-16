@@ -1,0 +1,738 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="0 0 234.53873 357.37982"
+   width="234.53873"
+   height="357.37982"
+   version="1.1"
+   id="svg100"
+   sodipodi:docname="mascot.svg"
+   inkscape:version="1.4.4 (dcaf3e7d9e, 2026-05-05)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview100"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     showguides="true"
+     inkscape:zoom="0.89169077"
+     inkscape:cx="42.61567"
+     inkscape:cy="182.7988"
+     inkscape:window-width="1517"
+     inkscape:window-height="733"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg100" />
+  <defs
+     id="defs34">
+    <!-- Door body: deep charcoal with slight warm tint -->
+    <linearGradient
+       id="bodyGrad"
+       x1="0"
+       y1="0"
+       x2="1"
+       y2="1">
+      <stop
+         offset="0%"
+         stop-color="#2A2030"
+         id="stop1" />
+      <stop
+         offset="45%"
+         stop-color="#1C1528"
+         id="stop2" />
+      <stop
+         offset="100%"
+         stop-color="#110D1A"
+         id="stop3" />
+    </linearGradient>
+    <!-- Door face highlight (top-left lit edge) -->
+    <linearGradient
+       id="bodyEdge"
+       x1="76.390511"
+       y1="19.740671"
+       x2="334.53775"
+       y2="19.740671"
+       gradientTransform="matrix(0.7592566,0,0,1.3170778,-30.805491,-91.453802)"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         offset="0%"
+         stop-color="#ffffff"
+         stop-opacity="0.08"
+         id="stop4" />
+      <stop
+         offset="30%"
+         stop-color="#ffffff"
+         stop-opacity="0.02"
+         id="stop5" />
+      <stop
+         offset="100%"
+         stop-color="#000000"
+         stop-opacity="0.15"
+         id="stop6" />
+    </linearGradient>
+    <!-- Panel inset -->
+    <linearGradient
+       id="panelGrad"
+       x1="0"
+       y1="0"
+       x2="0"
+       y2="1">
+      <stop
+         offset="0%"
+         stop-color="#0E0B16"
+         id="stop7" />
+      <stop
+         offset="100%"
+         stop-color="#1E1828"
+         id="stop8" />
+    </linearGradient>
+    <!-- Red accent glow -->
+    <linearGradient
+       id="redStripe"
+       x1="0"
+       y1="0"
+       x2="1"
+       y2="0">
+      <stop
+         offset="0%"
+         stop-color="#FF2D20"
+         stop-opacity="0"
+         id="stop9" />
+      <stop
+         offset="20%"
+         stop-color="#FF2D20"
+         id="stop10" />
+      <stop
+         offset="80%"
+         stop-color="#FF2D20"
+         id="stop11" />
+      <stop
+         offset="100%"
+         stop-color="#FF2D20"
+         stop-opacity="0"
+         id="stop12" />
+    </linearGradient>
+    <!-- Visor / sunglasses gradient -->
+    <linearGradient
+       id="visorGrad"
+       x1="0"
+       y1="0"
+       x2="1"
+       y2="1">
+      <stop
+         offset="0%"
+         stop-color="#1A0A08"
+         id="stop13" />
+      <stop
+         offset="100%"
+         stop-color="#0A0508"
+         id="stop14" />
+    </linearGradient>
+    <!-- Visor lens shine -->
+    <linearGradient
+       id="lensShine"
+       x1="0"
+       y1="0"
+       x2="0.60000002"
+       y2="1">
+      <stop
+         offset="0%"
+         stop-color="#FF4030"
+         stop-opacity="0.25"
+         id="stop15" />
+      <stop
+         offset="50%"
+         stop-color="#FF2D20"
+         stop-opacity="0.06"
+         id="stop16" />
+      <stop
+         offset="100%"
+         stop-color="#000000"
+         stop-opacity="0"
+         id="stop17" />
+    </linearGradient>
+    <!-- Metal handle -->
+    <linearGradient
+       id="handleGrad"
+       x1="0"
+       y1="0"
+       x2="0"
+       y2="1">
+      <stop
+         offset="0%"
+         stop-color="#C0B8D0"
+         id="stop18" />
+      <stop
+         offset="40%"
+         stop-color="#8880A0"
+         id="stop19" />
+      <stop
+         offset="100%"
+         stop-color="#504860"
+         id="stop20" />
+    </linearGradient>
+    <!-- Hinge metal -->
+    <linearGradient
+       id="hingeGrad"
+       x1="0"
+       y1="0"
+       x2="1"
+       y2="0">
+      <stop
+         offset="0%"
+         stop-color="#706888"
+         id="stop21" />
+      <stop
+         offset="50%"
+         stop-color="#A09AB8"
+         id="stop22" />
+      <stop
+         offset="100%"
+         stop-color="#504860"
+         id="stop23" />
+    </linearGradient>
+    <!-- Wheel rubber -->
+    <radialGradient
+       id="wheelRubber"
+       cx="0.40000001"
+       cy="0.34999999">
+      <stop
+         offset="0%"
+         stop-color="#3A3A3A"
+         id="stop24" />
+      <stop
+         offset="100%"
+         stop-color="#0F0F0F"
+         id="stop25" />
+    </radialGradient>
+    <!-- Wheel chrome -->
+    <radialGradient
+       id="wheelChrome"
+       cx="0.34999999"
+       cy="0.30000001">
+      <stop
+         offset="0%"
+         stop-color="#C0B8D0"
+         id="stop26" />
+      <stop
+         offset="60%"
+         stop-color="#706888"
+         id="stop27" />
+      <stop
+         offset="100%"
+         stop-color="#302840"
+         id="stop28" />
+    </radialGradient>
+    <!-- Arm skin -->
+    <linearGradient
+       id="armGrad"
+       x1="0"
+       y1="0"
+       x2="1"
+       y2="1">
+      <stop
+         offset="0%"
+         stop-color="#2A2030"
+         id="stop29" />
+      <stop
+         offset="100%"
+         stop-color="#181220"
+         id="stop30" />
+    </linearGradient>
+    <!-- Laravel L badge -->
+    <radialGradient
+       id="badgeBg"
+       cx="0.40000001"
+       cy="0.34999999">
+      <stop
+         offset="0%"
+         stop-color="#FF4030"
+         id="stop31" />
+      <stop
+         offset="100%"
+         stop-color="#CC1510"
+         id="stop32" />
+    </radialGradient>
+    <!-- Global drop shadow -->
+    <filter
+       id="glow"
+       x="-0.25714287"
+       y="-0.25714287"
+       width="1.5142857"
+       height="1.5142857">
+      <feGaussianBlur
+         stdDeviation="6"
+         result="blur"
+         id="feGaussianBlur32" />
+      <feComposite
+         in="SourceGraphic"
+         in2="blur"
+         operator="over"
+         id="feComposite32" />
+    </filter>
+    <filter
+       id="softShadow"
+       x="0"
+       y="0"
+       width="1"
+       height="1">
+      <feDropShadow
+         dx="4"
+         dy="8"
+         stdDeviation="8"
+         flood-color="#00000066" />
+    </filter>
+    <filter
+       id="redGlow"
+       x="-0.054545455"
+       y="-3.2"
+       width="1.1090909"
+       height="7.4000001">
+      <feGaussianBlur
+         stdDeviation="4"
+         result="blur"
+         id="feGaussianBlur33" />
+      <feMerge
+         id="feMerge34">
+        <feMergeNode
+           in="blur"
+           id="feMergeNode33" />
+        <feMergeNode
+           in="SourceGraphic"
+           id="feMergeNode34" />
+      </feMerge>
+    </filter>
+    <!-- Clip for visor lens -->
+    <clipPath
+       id="visorClip">
+      <rect
+         x="58"
+         y="150"
+         width="188"
+         height="52"
+         rx="12"
+         id="rect34" />
+    </clipPath>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#hingeGrad"
+       id="linearGradient104"
+       x1="90.307343"
+       y1="41.068089"
+       x2="113.86578"
+       y2="41.068089"
+       gradientTransform="scale(0.63671454,1.5705625)"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#hingeGrad"
+       id="linearGradient103"
+       x1="90.307343"
+       y1="139.75883"
+       x2="113.86578"
+       y2="139.75883"
+       gradientTransform="matrix(0.63671454,0,0,1.5705625,-6,6)"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#handleGrad"
+       id="linearGradient100"
+       x1="142.3111"
+       y1="334.90891"
+       x2="142.3111"
+       y2="349.29639"
+       gradientTransform="matrix(1.5986105,0,0,0.62554324,-14,0)"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#handleGrad"
+       id="linearGradient101"
+       x1="246.5"
+       y1="208.5"
+       x2="246.5"
+       y2="219.5"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(-14)" />
+  </defs>
+  <!-- ══════════ GROUND SHADOW ══════════ -->
+  <!-- ══════════ AXLE BAR ══════════ -->
+  <!-- ══════════ WHEELS ══════════ -->
+  <!-- Left wheel -->
+  <!-- Right wheel -->
+  <!-- ══════════ LEFT ARM (raised) ══════════ -->
+  <!-- Upper arm -->
+  <!-- Elbow joint circle -->
+  <!-- Forearm -->
+  <!-- Hand / fist -->
+  <!-- Knuckle lines -->
+  <!-- Thumb -->
+  <!-- ══════════ RIGHT ARM (holding laptop) ══════════ -->
+  <!-- Upper arm -->
+  <!-- Elbow -->
+  <!-- Forearm -->
+  <!-- Laptop in hand -->
+  <!-- Screen lid -->
+  <!-- Screen surface -->
+  <!-- Terminal content -->
+  <!-- Cursor blink -->
+  <!-- Laptop base / keyboard -->
+  <!-- Trackpad -->
+  <!-- ══════════ DOOR BODY ══════════ -->
+  <!-- Depth / side face (3D effect) -->
+  <!-- Main front face -->
+  <!-- Face highlight overlay -->
+  <!-- Outer border -->
+  <!-- ══════════ HINGES (left side) ══════════ -->
+  <!-- ══════════ DOOR PANELS (decorative inset) ══════════ -->
+  <!-- Top-left panel -->
+  <!-- Top-right panel -->
+  <!-- ══════════ RED ACCENT STRIPE ══════════ -->
+  <!-- ══════════ LARAVEL L BADGE (top-center) ══════════ -->
+  <!-- Badge backing glow -->
+  <!-- Badge ring -->
+  <!-- Badge fill -->
+  <!-- Badge inner shadow -->
+  <!-- L letterform -->
+  <!-- ══════════ VISOR / SUNGLASSES ══════════ -->
+  <!-- Visor housing -->
+  <!-- Left lens -->
+  <!-- Lens shine streak -->
+  <!-- Right lens -->
+  <!-- Bridge between lenses -->
+  <!-- Visor red LED strip under lenses -->
+  <!-- ══════════ SMIRK ══════════ -->
+  <!-- Mouth base -->
+  <!-- Mouth inner -->
+  <!-- Right smirk lift (asymmetric – attitude) -->
+  <!-- ══════════ BOTTOM PANEL ══════════ -->
+  <!-- ══════════ HANDLE (lever) ══════════ -->
+  <!-- Backplate -->
+  <!-- Lever arm -->
+  <!-- Lever end knob -->
+  <!-- Lock cylinder -->
+  <!-- ══════════ CORNER SCREWS ══════════ -->
+  <!-- ══════════ NAME PLATE ══════════ -->
+  <!-- Plate shadow -->
+  <!-- Plate -->
+  <!-- Plate inner highlight -->
+  <!-- Name text -->
+  <!-- ══════════ TAGLINE PLATE ══════════ -->
+  <g
+     id="g106"
+     transform="translate(-45.032211,-5.955709)">
+    <rect
+       style="fill:#4d4d4d;fill-opacity:0.438345;stroke-width:0.941235"
+       id="rect105"
+       width="175.6329"
+       height="323.29651"
+       x="54.50676"
+       y="3.4275384"
+       rx="2.8063405"
+       transform="matrix(0.99469179,0.10289915,0,1,0,0)" />
+    <g
+       id="g102"
+       transform="translate(-55.760149,73.762082)">
+      <rect
+         x="258"
+         y="230"
+         width="74.164536"
+         height="39.154404"
+         rx="4"
+         fill="#0e0b16"
+         stroke="#ff2d20"
+         stroke-width="1.5"
+         id="rect56" />
+      <rect
+         x="261"
+         y="233"
+         width="68.347115"
+         height="29.859354"
+         rx="4.6133552"
+         fill="#0a0814"
+         id="rect57"
+         style="stroke-width:1.24007" />
+      <text
+         x="264"
+         y="244"
+         font-family="'Courier New', monospace"
+         font-size="5.5px"
+         fill="#ff2d20"
+         font-weight="bold"
+         id="text57">$ ./run.sh</text>
+      <text
+         x="264"
+         y="252"
+         font-family="'Courier New', monospace"
+         font-size="5px"
+         fill="#00e676"
+         id="text58">Starting Laravel...</text>
+      <text
+         x="264"
+         y="259"
+         font-family="'Courier New', monospace"
+         font-size="5px"
+         fill="#888888"
+         id="text59">http://127.0.0.1:8080</text>
+      <rect
+         x="264"
+         y="261"
+         width="4"
+         height="5"
+         fill="#ff2d20"
+         opacity="0.9"
+         id="rect59" />
+      <rect
+         x="255.17157"
+         y="270.14066"
+         width="79.659523"
+         height="7.8438773"
+         rx="3"
+         fill="#181228"
+         stroke="#ff2d20"
+         stroke-width="1"
+         id="rect60" />
+      <rect
+         x="288.26706"
+         y="272.28131"
+         width="16"
+         height="4"
+         rx="2"
+         fill="#302840"
+         stroke="#504860"
+         stroke-width="0.5"
+         id="rect61" />
+    </g>
+    <g
+       id="g105"
+       transform="matrix(0.80177147,0.08896456,0,1.0003971,3.7409805,-25.310681)">
+      <rect
+         x="58"
+         y="26"
+         width="196"
+         height="340"
+         rx="10"
+         fill="url(#bodyGrad)"
+         id="rect63"
+         style="fill:#008000" />
+      <rect
+         x="58"
+         y="26"
+         width="196"
+         height="340"
+         rx="10"
+         fill="none"
+         stroke="#ff2d20"
+         stroke-width="1.5"
+         opacity="0.6"
+         id="rect65" />
+      <g
+         id="g104"
+         transform="translate(-6)">
+        <rect
+           x="58"
+           y="65"
+           width="14"
+           height="36"
+           rx="3"
+           fill="url(#hingeGrad)"
+           stroke="#302840"
+           stroke-width="1"
+           id="rect66"
+           style="fill:url(#linearGradient104)" />
+        <circle
+           cx="65"
+           cy="72"
+           r="3"
+           fill="#302840"
+           id="circle66" />
+        <circle
+           cx="65"
+           cy="94"
+           r="3"
+           fill="#302840"
+           id="circle67" />
+      </g>
+      <g
+         id="g103"
+         transform="translate(0,62)">
+        <rect
+           x="52"
+           y="226"
+           width="14"
+           height="36"
+           rx="3"
+           fill="url(#hingeGrad)"
+           stroke="#302840"
+           stroke-width="1"
+           id="rect67"
+           style="fill:url(#linearGradient103)" />
+        <circle
+           cx="59"
+           cy="233"
+           r="3"
+           fill="#302840"
+           id="circle68" />
+        <circle
+           cx="59"
+           cy="255"
+           r="3"
+           fill="#302840"
+           id="circle69" />
+      </g>
+      <g
+         id="g101"
+         transform="translate(-1.4939903,-32.677904)">
+        <rect
+           x="230"
+           y="196"
+           width="16"
+           height="52"
+           rx="5"
+           fill="#181228"
+           stroke="#ff2d20"
+           stroke-width="1"
+           opacity="0.9"
+           id="rect87" />
+        <rect
+           x="214"
+           y="210"
+           width="22"
+           height="8"
+           rx="4"
+           fill="url(#handleGrad)"
+           stroke="#302840"
+           stroke-width="1"
+           id="rect88"
+           style="fill:url(#linearGradient100)" />
+        <circle
+           cx="238"
+           cy="214"
+           r="5"
+           fill="url(#handleGrad)"
+           stroke="#302840"
+           stroke-width="1"
+           id="circle88"
+           style="fill:url(#linearGradient101)" />
+        <rect
+           x="235"
+           y="232"
+           width="8"
+           height="12"
+           rx="3"
+           fill="#ff2d20"
+           opacity="0.9"
+           id="rect89" />
+        <circle
+           cx="239"
+           cy="238"
+           r="3"
+           fill="#1a0a08"
+           id="circle89" />
+      </g>
+      <circle
+         cx="72"
+         cy="38"
+         r="4"
+         fill="#302840"
+         stroke="#504860"
+         stroke-width="1"
+         id="circle90" />
+      <line
+         x1="70"
+         y1="36"
+         x2="74"
+         y2="40"
+         stroke="#606080"
+         stroke-width="0.8"
+         id="line90" />
+      <line
+         x1="74"
+         y1="36"
+         x2="70"
+         y2="40"
+         stroke="#606080"
+         stroke-width="0.8"
+         id="line91" />
+      <circle
+         cx="244"
+         cy="38"
+         r="4"
+         fill="#302840"
+         stroke="#504860"
+         stroke-width="1"
+         id="circle91" />
+      <line
+         x1="242"
+         y1="36"
+         x2="246"
+         y2="40"
+         stroke="#606080"
+         stroke-width="0.8"
+         id="line92" />
+      <line
+         x1="246"
+         y1="36"
+         x2="242"
+         y2="40"
+         stroke="#606080"
+         stroke-width="0.8"
+         id="line93" />
+      <circle
+         cx="72"
+         cy="358"
+         r="4"
+         fill="#302840"
+         stroke="#504860"
+         stroke-width="1"
+         id="circle93" />
+      <line
+         x1="70"
+         y1="356"
+         x2="74"
+         y2="360"
+         stroke="#606080"
+         stroke-width="0.8"
+         id="line94" />
+      <line
+         x1="74"
+         y1="356"
+         x2="70"
+         y2="360"
+         stroke="#606080"
+         stroke-width="0.8"
+         id="line95" />
+      <circle
+         cx="244"
+         cy="358"
+         r="4"
+         fill="#302840"
+         stroke="#504860"
+         stroke-width="1"
+         id="circle95" />
+      <line
+         x1="242"
+         y1="356"
+         x2="246"
+         y2="360"
+         stroke="#606080"
+         stroke-width="0.8"
+         id="line96" />
+      <line
+         x1="246"
+         y1="356"
+         x2="242"
+         y2="360"
+         stroke="#606080"
+         stroke-width="0.8"
+         id="line97" />
+    </g>
+  </g>
+</svg>
