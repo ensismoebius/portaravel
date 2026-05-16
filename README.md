@@ -802,7 +802,7 @@ Download matching Xdebug DLL from https://xdebug.org, place in `php\ext\php_xdeb
 
 <!-- ================================================================== -->
 <a id="-brasileiro"></a>
-## 🇧🇷 Português (Brasil)
+## 🇧🇷 Brasileiro
 <!-- ================================================================== -->
 
 ## Índice
