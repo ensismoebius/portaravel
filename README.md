@@ -59,7 +59,7 @@ No compilers, no root, no system packages — just `curl` and `tar`.
 
 **Linux:**
 ```bash
-curl -fsSL https://github.com/ensismoebius/portaravel/releases/latest/download/portable-laravel-linux.tar.gz | tar -xz && cd portable-laravel-linux && ./run.sh
+curl -fL --progress-bar https://github.com/ensismoebius/portaravel/releases/latest/download/portable-laravel-linux.tar.gz | tar -xz && cd portable-laravel-linux && ./run.sh
 ```
 
 **Windows (PowerShell):**
@@ -508,7 +508,7 @@ Download matching Xdebug DLL from https://xdebug.org, place in `php\ext\php_xdeb
 
 **Linux:**
 ```bash
-curl -fsSL https://github.com/ensismoebius/portaravel/releases/latest/download/portable-laravel-linux.tar.gz | tar -xz && cd portable-laravel-linux && ./run.sh
+curl -fL --progress-bar https://github.com/ensismoebius/portaravel/releases/latest/download/portable-laravel-linux.tar.gz | tar -xz && cd portable-laravel-linux && ./run.sh
 ```
 
 **Windows (PowerShell):**
