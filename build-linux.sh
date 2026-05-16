@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
 # =============================================================
-# Portable Laravel Linux Distribution Builder v2.1.0
+# Portable Laravel Linux Distribution Builder v2.2.0
 # =============================================================
 # Creates a fully self-contained, portable Laravel development
 # environment for Linux x86_64.
 #
 # Components:
-#   - Static PHP (built via static-php-cli / spc)
+#   - Static PHP (pre-built from dl.static-php.dev – no root needed)
 #   - Composer PHAR
 #   - Node.js LTS (portable binary)
 #   - Laravel (installed with bundled tools)
 #   - SQLite database
-#   - Xdebug + OPcache pre-configured
+#   - OPcache pre-configured
 #   - php artisan serve as the HTTP server
 #
-# No root/admin required for the DISTRIBUTION.
-# BUILD machine requires: curl, tar, gcc, make, cmake, git
+# No root/admin required for the BUILD or the DISTRIBUTION.
+# BUILD machine requires: curl, tar, gzip, git
 # (auto-detected; install instructions shown if missing).
 #
 # Usage:
@@ -66,25 +66,14 @@ DB_DIR="$DIST/database"
 TOOLS_DIR="$DIST/tools"
 TEMP_DIR="$DIST/temp"
 LOGS_DIR="$DIST/logs"
-SPC_WORK="$BUILD_BASE/_spc"   # Static-php-cli build workspace
 
 # ---------------------------------------------------------------
 # VERSION CONFIGURATION
 # ---------------------------------------------------------------
 PHP_MINOR="8.4"
 NODE_SERIES="22"       # LTS major series
-XDEBUG_VERSION="3.4.2"
 SERVER_HOST="127.0.0.1"
 SERVER_PORT="8080"
-
-# Extensions to compile into the static PHP binary via SPC
-EXTENSIONS="bcmath,bz2,calendar,ctype,curl,date,dom,exif,fileinfo,\
-filter,ftp,gd,gettext,hash,iconv,intl,mbstring,mysqli,openssl,\
-pcntl,pcre,pdo,pdo_mysql,pdo_sqlite,phar,posix,readline,\
-session,simplexml,sockets,sodium,sqlite3,tokenizer,xml,\
-xmlreader,xmlwriter,zip,zlib,xdebug,opcache"
-
-EXTENSIONS="${EXTENSIONS//[$'\t\r\n ']}"   # strip whitespace
 
 # ---------------------------------------------------------------
 # COLOUR OUTPUT
@@ -141,25 +130,6 @@ check_prerequisites() {
         exit 1
     fi
 
-    local build_missing=()
-    for cmd in gcc g++ make cmake pkg-config; do
-        command -v "$cmd" &>/dev/null || build_missing+=("$cmd")
-    done
-
-    if [[ ${#build_missing[@]} -gt 0 ]]; then
-        warn "Build tools missing: ${build_missing[*]}"
-        echo ""
-        echo "These are required to compile the static PHP binary."
-        echo "Install with:"
-        echo "  Ubuntu/Debian: sudo apt-get install -y build-essential cmake pkg-config"
-        echo "                 sudo apt-get install -y libssl-dev libcurl4-openssl-dev"
-        echo "  Fedora/RHEL:   sudo dnf install -y gcc gcc-c++ make cmake pkgconfig openssl-devel"
-        echo "  Arch Linux:    sudo pacman -S --noconfirm base-devel cmake openssl"
-        echo ""
-        echo "After installing build tools, re-run this script."
-        exit 1
-    fi
-
     ok "All prerequisites satisfied"
 }
 
@@ -179,8 +149,7 @@ init_workspace() {
               "$COMPOSER_DIR" "$NODE_DIR" \
               "$APP_DIR" "$DB_DIR" "$TOOLS_DIR" \
               "$TEMP_DIR" "$LOGS_DIR" \
-              "$TEMP_DIR/sessions" "$TEMP_DIR/npm-cache" "$TEMP_DIR/npm-global" \
-              "$SPC_WORK"; do
+              "$TEMP_DIR/sessions" "$TEMP_DIR/npm-cache" "$TEMP_DIR/npm-global"; do
         mkdir -p "$d"
     done
 
@@ -192,102 +161,70 @@ init_workspace() {
 }
 
 # ---------------------------------------------------------------
-# PHASE 2  –  STATIC PHP VIA STATIC-PHP-CLI (SPC)
+# PHASE 2  –  PRE-BUILT STATIC PHP
+# Downloads a fully-static, musl-linked PHP CLI binary from
+# dl.static-php.dev – no compiler, no root, no system libraries.
+# Works on any Linux x86_64 distribution.
 # ---------------------------------------------------------------
 build_php() {
-    phase "Building static PHP $PHP_MINOR (via static-php-cli – may take 20-40 min)"
+    phase "Downloading pre-built static PHP $PHP_MINOR"
 
     if [[ -f "$PHP_BIN" ]]; then
-        info "Static PHP already present – skipping build"
+        info "Static PHP already present – skipping download"
         PHP_VERSION="$("$PHP_BIN" --version 2>/dev/null | head -1 | grep -oP '\d+\.\d+\.\d+')"
         return
     fi
 
-    # ---- Download the SPC self-contained binary ----
-    local spc="$SPC_WORK/spc"
+    local base_url="https://dl.static-php.dev/static-php-cli/common"
+    local php_file=""
 
-    if [[ ! -f "$spc" ]]; then
-        info "Resolving latest static-php-cli release..."
+    info "Querying available PHP $PHP_MINOR builds..."
 
-        local spc_api
-        spc_api="$(curl -sfL "https://api.github.com/repos/crazywhalecc/static-php-cli/releases/latest")"
+    # Attempt 1: JSON directory index
+    local index
+    index="$(curl -sfL "${base_url}/?format=json" 2>/dev/null)" || true
 
-        local spc_url
-        spc_url="$(echo "$spc_api" | grep -oP '"browser_download_url":\s*"\K[^"]+spc-linux-x86_64\.tar\.gz')" || true
-
-        if [[ -n "$spc_url" ]]; then
-            local spc_tar="$CACHE/spc-linux-x86_64.tar.gz"
-            download "$spc_url" "$spc_tar" "spc (static-php-cli binary)"
-            tar -xzf "$spc_tar" -C "$SPC_WORK"
-            chmod +x "$SPC_WORK/spc"
-        else
-            # Fallback: PHAR (requires system PHP)
-            _install_spc_phar "$spc"
-        fi
+    if [[ -n "$index" ]]; then
+        php_file="$(printf '%s' "$index" | \
+            grep -oP 'php-'"$PHP_MINOR"'\.[0-9]+-cli-linux-x86_64\.tar\.gz' | \
+            sort -V | tail -1)" || true
     fi
 
-    [[ -f "$spc" ]] || { echo "Cannot obtain SPC binary – aborting."; exit 1; }
-
-    # ---- Run SPC ----
-    cd "$SPC_WORK"
-
-    info "Running: spc doctor --auto-fix"
-    ./spc doctor --auto-fix 2>&1 | tail -5 || true
-
-    info "Downloading PHP $PHP_MINOR sources..."
-    ./spc download \
-        --for-extensions="$EXTENSIONS" \
-        --with-php="$PHP_MINOR" \
-        --no-interaction \
-        --prefer-pre-built \
-        2>&1 | tail -8
-
-    info "Compiling static PHP CLI binary (be patient)..."
-    ./spc build "$EXTENSIONS" \
-        --build-cli \
-        --no-interaction \
-        2>&1 | tail -12
-
-    # ---- Collect artifacts ----
-    if [[ -f "$SPC_WORK/buildroot/bin/php" ]]; then
-        cp "$SPC_WORK/buildroot/bin/php" "$PHP_BIN"
-        chmod +x "$PHP_BIN"
-    else
-        echo "Build finished but php binary not found in buildroot/bin/"
-        exit 1
+    # Attempt 2: probe known patch versions via HEAD (newest first)
+    if [[ -z "$php_file" ]]; then
+        warn "JSON index unavailable – probing latest PHP $PHP_MINOR release..."
+        for patch in 30 29 28 27 26 25 24 23 22 21 20 19 18 17 16 15 14 13 12 11 10 9 8 7 6 5; do
+            local candidate="php-${PHP_MINOR}.${patch}-cli-linux-x86_64.tar.gz"
+            if curl -sfI "${base_url}/${candidate}" &>/dev/null; then
+                php_file="$candidate"
+                break
+            fi
+        done
     fi
 
-    # SPC may produce a shared xdebug.so alongside the static binary
-    XDEBUG_SHARED=false
-    if [[ -f "$SPC_WORK/buildroot/extensions/xdebug.so" ]]; then
-        cp "$SPC_WORK/buildroot/extensions/xdebug.so" "$PHP_DIR/ext/xdebug.so"
-        XDEBUG_SHARED=true
-        info "Xdebug installed as shared extension: php/ext/xdebug.so"
-    else
-        info "Xdebug compiled statically into the PHP binary"
-    fi
+    [[ -z "$php_file" ]] && { echo "ERROR: Cannot find a pre-built PHP $PHP_MINOR binary at $base_url"; exit 1; }
+    info "Selecting: $php_file"
 
-    PHP_VERSION="$("$PHP_BIN" --version 2>/dev/null | head -1 | grep -oP '\d+\.\d+\.\d+')"
+    local cached="$CACHE/${php_file}"
+    download "${base_url}/${php_file}" "$cached" "PHP $PHP_MINOR CLI (static, musl)"
+
+    info "Extracting PHP binary..."
+    local extract_dir="$CACHE/php-extract"
+    rm -rf "$extract_dir"
+    mkdir -p "$extract_dir"
+    tar -xzf "$cached" -C "$extract_dir"
+
+    # Binary may be at root of archive or in a subdirectory
+    local php_extracted
+    php_extracted="$(find "$extract_dir" -maxdepth 3 -name 'php' -type f | head -1)"
+    [[ -z "$php_extracted" ]] && { echo "ERROR: php binary not found inside $php_file"; exit 1; }
+
+    cp "$php_extracted" "$PHP_BIN"
+    chmod +x "$PHP_BIN"
+    rm -rf "$extract_dir"
+
+    PHP_VERSION="$("$PHP_BIN" --version 2>/dev/null | head -1 | grep -oP '\d+\.\d+\.\d+' | head -1)"
     ok "Static PHP $PHP_VERSION -> php/bin/php"
-    cd "$SCRIPT_DIR"
-}
-
-# Fallback: wrap SPC PHAR with system PHP
-_install_spc_phar() {
-    local dest="$1"
-    if ! command -v php &>/dev/null; then
-        echo "ERROR: No system PHP and no SPC binary available."
-        echo "Install build-essential and re-run, or install system PHP first."
-        exit 1
-    fi
-    local phar="$SPC_WORK/spc.phar"
-    local url
-    url="$(curl -sfL "https://api.github.com/repos/crazywhalecc/static-php-cli/releases/latest" | \
-           grep -oP '"browser_download_url":\s*"\K[^"]+spc\.phar')" || true
-    [[ -z "$url" ]] && { echo "Cannot locate spc.phar download URL"; exit 1; }
-    download "$url" "$phar" "spc.phar"
-    printf '#!/usr/bin/env bash\nexec php "%s" "$@"\n' "$phar" > "$dest"
-    chmod +x "$dest"
 }
 
 # ---------------------------------------------------------------
@@ -296,14 +233,7 @@ _install_spc_phar() {
 write_php_ini() {
     phase "Generating php.ini template"
 
-    local xdebug_load
-    if [[ "${XDEBUG_SHARED:-false}" == "true" ]]; then
-        xdebug_load="zend_extension = __PHP_EXT_DIR__/xdebug.so"
-    else
-        xdebug_load="; Xdebug is compiled statically – no zend_extension line needed"
-    fi
-
-    cat > "$PHP_DIR/php.ini.template" <<PHP_INI
+    cat > "$PHP_DIR/php.ini.template" <<'PHP_INI'
 ; ============================================================
 ; Portable Laravel Linux – php.ini
 ; Generated by build-linux.sh
@@ -371,31 +301,12 @@ opcache.memory_consumption      = 256
 opcache.interned_strings_buffer = 16
 opcache.max_accelerated_files   = 20000
 opcache.fast_shutdown           = 1
-
-; ============================================================
-; Xdebug
-; ============================================================
-$xdebug_load
-
-[xdebug]
-xdebug.mode                     = develop,debug,profile
-xdebug.start_with_request       = yes
-xdebug.client_host              = 127.0.0.1
-xdebug.client_port              = 9003
-xdebug.log_level                = 0
-xdebug.idekey                   = VSCODE
-xdebug.var_display_max_depth    = -1
-xdebug.var_display_max_children = -1
-xdebug.var_display_max_data     = -1
-xdebug.output_dir               = __TEMP__
-xdebug.profiler_output_dir      = __TEMP__
 PHP_INI
 
     # Generate an initial php.ini with build-time paths (overwritten on first launch)
     sed \
         -e "s|__LOGS__|$LOGS_DIR|g" \
         -e "s|__TEMP__|$TEMP_DIR|g" \
-        -e "s|__PHP_EXT_DIR__|$PHP_DIR/ext|g" \
         "$PHP_DIR/php.ini.template" > "$PHP_DIR/php.ini"
 
     ok "php.ini and php.ini.template written"
@@ -409,7 +320,7 @@ install_composer() {
     local phar="$COMPOSER_DIR/composer.phar"
     download "https://getcomposer.org/composer.phar" "$phar" "Composer (latest stable)"
     chmod +x "$phar"
-    COMPOSER_VERSION="$(XDEBUG_MODE=off "$PHP_BIN" "$phar" --version 2>/dev/null | \
+    COMPOSER_VERSION="$("$PHP_BIN" "$phar" --version 2>/dev/null | \
         grep -oP 'Composer version \K[\d.]+')"
     ok "Composer $COMPOSER_VERSION installed"
 }
@@ -448,12 +359,49 @@ create_laravel() {
     fi
 
     info "Running composer create-project (may take a few minutes)..."
-    XDEBUG_MODE=off \
     "$PHP_BIN" -c "$PHP_DIR/php.ini" \
         "$COMPOSER_DIR/composer.phar" create-project \
         "laravel/laravel" "$APP_DIR" \
         --prefer-dist --no-interaction --no-progress \
-        2>&1 | grep -v "^$" | head -50
+        2>&1 | grep -vE '^\s*-\s+Locking\s'
+
+    [[ -f "$APP_DIR/artisan" ]] || { echo "ERROR: Laravel create-project failed"; exit 1; }
+
+    # Patch vite.config.js: explicit host binding so HMR WebSocket works reliably
+    info "Patching vite.config.js for HMR compatibility..."
+    cat > "$APP_DIR/vite.config.js" <<'VITE_CFG'
+import { defineConfig } from 'vite';
+import laravel from 'laravel-vite-plugin';
+import tailwindcss from '@tailwindcss/vite';
+
+export default defineConfig({
+    plugins: [
+        laravel({
+            input: ['resources/css/app.css', 'resources/js/app.js'],
+            refresh: true,
+        }),
+        tailwindcss(),
+    ],
+    server: {
+        // Bind explicitly to 127.0.0.1 — avoids getaddrinfo failures on some systems
+        host: '127.0.0.1',
+        port: 5173,
+
+        // Only set the HMR host — DO NOT hardcode hmr.port.
+        // Vite derives it automatically from server.port when hmr.port is omitted,
+        // so a port-conflict fallback keeps the WebSocket consistent.
+        hmr: {
+            host: '127.0.0.1',
+        },
+
+        // Allow requests from the artisan serve origin
+        cors: {
+            origin: 'http://127.0.0.1:8080',
+        },
+    },
+});
+VITE_CFG
+    ok "vite.config.js patched"
 
     ok "Laravel created at app/"
 }
@@ -466,7 +414,7 @@ configure_laravel() {
 
     local artisan="$APP_DIR/artisan"
 
-    LARAVEL_VERSION="$(XDEBUG_MODE=off "$PHP_BIN" "$artisan" --version 2>/dev/null | \
+    LARAVEL_VERSION="$("$PHP_BIN" "$artisan" --version 2>/dev/null | \
         grep -oP 'Laravel Framework \K[\d.]+')"
 
     # Create SQLite database
@@ -491,18 +439,18 @@ configure_laravel() {
     echo "DB_DATABASE=$DB_DIR/database.sqlite" >> "$envfile"
 
     # Generate app key
-    XDEBUG_MODE=off DB_DATABASE="$DB_DIR/database.sqlite" \
+    DB_DATABASE="$DB_DIR/database.sqlite" \
         "$PHP_BIN" -c "$PHP_DIR/php.ini" "$artisan" key:generate --force &>/dev/null
     ok "App key generated"
 
     # Run migrations
     info "Running migrations..."
-    XDEBUG_MODE=off DB_DATABASE="$DB_DIR/database.sqlite" \
+    DB_DATABASE="$DB_DIR/database.sqlite" \
         "$PHP_BIN" -c "$PHP_DIR/php.ini" "$artisan" migrate --force 2>&1 | \
         grep -E 'Running|Migrated|Nothing' || true
 
     # Storage link
-    XDEBUG_MODE=off "$PHP_BIN" -c "$PHP_DIR/php.ini" "$artisan" storage:link &>/dev/null || true
+    "$PHP_BIN" -c "$PHP_DIR/php.ini" "$artisan" storage:link &>/dev/null || true
 
     ok "Laravel configured (v$LARAVEL_VERSION)"
 }
@@ -520,7 +468,15 @@ install_npm() {
     info "Running npm install..."
     "$NODE_DIR/bin/npm" install --prefix "$APP_DIR" 2>&1 | tail -8
 
-    ok "Node modules installed"
+    info "Building Vite production assets..."
+    "$NODE_DIR/bin/npm" --prefix "$APP_DIR" run build 2>&1 | tail -8
+
+    # Clear npm cache and global dirs – not needed at runtime
+    info "Clearing npm build cache..."
+    rm -rf "$TEMP_DIR/npm-cache" "$TEMP_DIR/npm-global"
+    mkdir -p "$TEMP_DIR/npm-cache" "$TEMP_DIR/npm-global"
+
+    ok "Node modules installed and assets built"
 }
 
 # ---------------------------------------------------------------
@@ -536,12 +492,12 @@ install_dev_tools() {
     local db="$DB_DIR/database.sqlite"
 
     _composer() {
-        XDEBUG_MODE=off DB_DATABASE="$db" \
+        DB_DATABASE="$db" \
             "$php" -c "$ini" "$composer" \
             --working-dir="$APP_DIR" --no-interaction "$@" 2>&1 | tail -5
     }
     _artisan() {
-        XDEBUG_MODE=off DB_DATABASE="$db" \
+        DB_DATABASE="$db" \
             "$php" -c "$ini" "$artisan" "$@" 2>&1 | tail -3
     }
 
@@ -594,11 +550,10 @@ mkdir -p "$LOGS_DIR" "$TEMP_DIR" "$TEMP_DIR/sessions" "$DB_DIR" \
          "$TEMP_DIR/npm-cache" "$TEMP_DIR/npm-global"
 [[ -f "$DB_DIR/database.sqlite" ]] || touch "$DB_DIR/database.sqlite"
 
-# Regenerate php.ini from template (resolves __LOGS__, __TEMP__, __PHP_EXT_DIR__)
+# Regenerate php.ini from template (resolves __LOGS__, __TEMP__)
 sed \
     -e "s|__LOGS__|$LOGS_DIR|g" \
     -e "s|__TEMP__|$TEMP_DIR|g" \
-    -e "s|__PHP_EXT_DIR__|$PHP_DIR/ext|g" \
     "$PHP_DIR/php.ini.template" > "$PHP_DIR/php.ini"
 
 # Portable PATH (our binaries prepended, never polluting system)
@@ -632,7 +587,7 @@ ENV_SH
     cat > "$DIST/run.sh" <<'RUN_SH'
 #!/usr/bin/env bash
 # Portable Laravel – run.sh
-# Starts php artisan serve, runs migrations, opens browser.
+# Starts Vite HMR + php artisan serve, runs migrations, opens browser.
 
 set -euo pipefail
 DIST_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -648,7 +603,7 @@ echo "  Node:     $NODE_DIR/bin/node"
 echo "  App:      $APP_DIR"
 echo "  DB:       $DB_DATABASE"
 echo "  URL:      $LARAVEL_URL"
-echo "  Logs:     $LOGS_DIR"
+echo "  Vite:     http://127.0.0.1:5173  (hot reload)"
 echo ""
 echo "  Server:   php artisan serve"
 echo " ============================================================"
@@ -656,23 +611,61 @@ echo ""
 
 [[ -x "$PHP_BIN" ]] || { echo "[ERROR] PHP binary not executable: $PHP_BIN"; exit 1; }
 
+# Clean up any leftover processes from a previous run
+_kill_port() {
+    local port="$1"
+    if command -v fuser &>/dev/null; then
+        fuser -k "${port}/tcp" 2>/dev/null || true
+    elif command -v lsof &>/dev/null; then
+        local pids
+        pids="$(lsof -ti ":${port}" 2>/dev/null)" || true
+        [[ -n "$pids" ]] && kill $pids 2>/dev/null || true
+    fi
+}
+_kill_port 5173
+_kill_port "$LARAVEL_PORT"
+
 # Run database migrations
 echo "Running migrations..."
 "$PHP_BIN" "$APP_DIR/artisan" migrate --force 2>>"$LOGS_DIR/artisan.log" || \
-    warn "Migration issues – see logs/artisan.log"
+    echo "[!!] Migration issues – see logs/artisan.log"
 
-# Open browser asynchronously
-if command -v xdg-open &>/dev/null; then
-    (sleep 3 && xdg-open "$LARAVEL_URL" 2>/dev/null) &
-elif command -v open &>/dev/null; then
-    (sleep 3 && open "$LARAVEL_URL" 2>/dev/null) &
-fi
+# Write public/hot so Laravel serves assets from the Vite dev server
+echo "http://127.0.0.1:5173" > "$APP_DIR/public/hot"
 
-echo "Starting server on $LARAVEL_URL ..."
-echo "Press Ctrl+C to stop."
+# Start Vite in a background subshell; clean up hot file when it exits
+(
+    cd "$APP_DIR"
+    "$NODE_DIR/bin/npm" run dev
+    rm -f "$APP_DIR/public/hot"
+) &
+VITE_PID=$!
+echo " Vite HMR starting in background (PID $VITE_PID)..."
+
+echo " Laravel starting on $LARAVEL_URL ..."
+echo " Browser opens in a few seconds."
+echo ""
+echo " Press Ctrl+C to stop."
 echo ""
 
-exec "$PHP_BIN" "$APP_DIR/artisan" serve \
+# Open browser after a short delay
+if command -v xdg-open &>/dev/null; then
+    (sleep 4 && xdg-open "$LARAVEL_URL" 2>/dev/null) &
+elif command -v open &>/dev/null; then
+    (sleep 4 && open "$LARAVEL_URL" 2>/dev/null) &
+fi
+
+# Trap to stop Vite and clean up when Laravel exits
+_cleanup() {
+    echo ""
+    echo "Stopping Vite..."
+    kill "$VITE_PID" 2>/dev/null || true
+    rm -f "$APP_DIR/public/hot"
+    echo "All stopped."
+}
+trap _cleanup EXIT INT TERM
+
+"$PHP_BIN" "$APP_DIR/artisan" serve \
     --host="$LARAVEL_HOST" \
     --port="$LARAVEL_PORT" \
     2>&1 | tee -a "$LOGS_DIR/server.log"
@@ -710,7 +703,7 @@ echo ""
 
 # Convenience aliases inside this shell
 artisan()  { "$PHP_BIN" "$APP_DIR/artisan" "$@"; }
-composer() { XDEBUG_MODE=off "$PHP_BIN" "$COMPOSER_DIR/composer.phar" "$@"; }
+composer() { "$PHP_BIN" "$COMPOSER_DIR/composer.phar" "$@"; }
 export -f artisan composer
 
 cd "$APP_DIR"
@@ -736,7 +729,7 @@ ARTISAN_SH
 #!/usr/bin/env bash
 DIST_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$DIST_ROOT/_env.sh"
-exec XDEBUG_MODE=off "$PHP_BIN" "$COMPOSER_DIR/composer.phar" "$@"
+exec "$PHP_BIN" "$COMPOSER_DIR/composer.phar" "$@"
 COMP_SH
     chmod +x "$DIST/composer.sh"
 
@@ -757,14 +750,47 @@ NPM_SH
     cat > "$DIST/vite.sh" <<'VITE_SH'
 #!/usr/bin/env bash
 # Portable Laravel – vite.sh
-# Starts the Vite HMR dev server. Run alongside run.sh.
+# Starts the Vite HMR dev server standalone. Run alongside run.sh.
 
 DIST_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$DIST_ROOT/_env.sh"
-echo "Starting Vite development server (hot reload)..."
-echo "Keep this running alongside run.sh for HMR."
+
+echo ""
+echo " ============================================================"
+echo "  Vite HMR Dev Server"
+echo " ============================================================"
+echo ""
+echo "  Keep run.sh open in another terminal."
+echo "  Vite runs on http://127.0.0.1:5173"
+echo "  Edit files in app/resources/ for live hot-reload."
+echo ""
+echo "  Press Ctrl+C to stop."
+echo " ============================================================"
+echo ""
+
+# Kill any orphaned process still holding port 5173 from a previous run.
+# Ensures Vite always binds to 5173 so the HMR WebSocket port stays consistent.
+if command -v fuser &>/dev/null; then
+    fuser -k 5173/tcp 2>/dev/null || true
+elif command -v lsof &>/dev/null; then
+    pids="$(lsof -ti :5173 2>/dev/null)" || true
+    [[ -n "$pids" ]] && kill $pids 2>/dev/null || true
+fi
+
+# Write public/hot so Laravel switches from pre-built assets to the Vite dev server
+echo "http://127.0.0.1:5173" > "$APP_DIR/public/hot"
+echo "[Vite] Hot file written – Laravel is now using the dev server."
+
 cd "$APP_DIR"
-exec "$NODE_DIR/bin/npm" run dev
+"$NODE_DIR/bin/npm" run dev
+
+# When Vite stops (Ctrl+C or natural exit), remove hot so Laravel
+# falls back to the pre-built assets in public/build/
+echo ""
+if [[ -f "$APP_DIR/public/hot" ]]; then
+    rm -f "$APP_DIR/public/hot"
+    echo "[Vite] Hot file removed – Laravel reverted to production build."
+fi
 VITE_SH
     chmod +x "$DIST/vite.sh"
 
@@ -774,23 +800,32 @@ VITE_SH
     cat > "$DIST/stop.sh" <<'STOP_SH'
 #!/usr/bin/env bash
 # Portable Laravel – stop.sh
-# Kills the artisan serve and Vite processes.
+# Kills the artisan serve (port 8080) and Vite (port 5173) processes.
 
 echo "Stopping Portable Laravel processes..."
 
-# Kill artisan serve by finding processes on the configured port
 DIST_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$DIST_ROOT/_env.sh" 2>/dev/null || LARAVEL_PORT=8080
 
-if command -v fuser &>/dev/null; then
-    fuser -k "${LARAVEL_PORT}/tcp" 2>/dev/null && echo "Server on port $LARAVEL_PORT stopped." || true
-elif command -v lsof &>/dev/null; then
-    local pids
-    pids="$(lsof -ti ":$LARAVEL_PORT" 2>/dev/null)" || true
-    [[ -n "$pids" ]] && kill $pids 2>/dev/null && echo "Server on port $LARAVEL_PORT stopped." || true
-fi
+_kill_port() {
+    local port="$1"
+    if command -v fuser &>/dev/null; then
+        fuser -k "${port}/tcp" 2>/dev/null && echo "Stopped process on port ${port}." || true
+    elif command -v lsof &>/dev/null; then
+        local pids
+        pids="$(lsof -ti ":${port}" 2>/dev/null)" || true
+        [[ -n "$pids" ]] && kill $pids 2>/dev/null && echo "Stopped process on port ${port}." || true
+    fi
+}
 
-pkill -f "vite" 2>/dev/null && echo "Vite stopped." || echo "Vite not running."
+_kill_port "$LARAVEL_PORT"
+_kill_port 5173
+
+pkill -f "npm run dev" 2>/dev/null && echo "Vite stopped." || true
+if [[ -f "$APP_DIR/public/hot" ]]; then
+    rm -f "$APP_DIR/public/hot"
+    echo "Hot file removed."
+fi
 echo "Done."
 STOP_SH
     chmod +x "$DIST/stop.sh"
@@ -812,30 +847,13 @@ write_vscode() {
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Listen for Xdebug",
-            "type": "php",
+            "name": "PHP: Built-in Server",
+            "type": "node",
             "request": "launch",
-            "port": 9003,
-            "hostname": "127.0.0.1",
-            "pathMappings": {
-                "${workspaceFolder}": "${workspaceFolder}"
-            },
-            "log": false,
-            "xdebugSettings": {
-                "max_data": -1,
-                "max_depth": -1,
-                "max_children": -1
-            }
-        },
-        {
-            "name": "Xdebug: Current Script",
-            "type": "php",
-            "request": "launch",
-            "program": "${file}",
-            "cwd": "${workspaceFolder}",
-            "port": 9003,
             "runtimeExecutable": "${workspaceFolder}/../php/bin/php",
-            "runtimeArgs": ["-c", "${workspaceFolder}/../php/php.ini"]
+            "runtimeArgs": ["-S", "127.0.0.1:8080", "-t", "public"],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
         }
     ]
 }
@@ -845,7 +863,6 @@ LAUNCH
 {
     "recommendations": [
         "bmewburn.vscode-intelephense-client",
-        "xdebug.php-debug",
         "onecentlin.laravel5-snippets",
         "ryannaddy.laravel-artisan",
         "amirmarmul.laravel-blade-vscode",
@@ -921,7 +938,6 @@ The browser opens automatically.
 | Laravel     | $LARAVEL_VERSION     |
 | Composer    | $COMPOSER_VERSION    |
 | Node.js LTS | $NODE_VERSION        |
-| Xdebug      | $XDEBUG_VERSION      |
 | Database    | SQLite               |
 | Server      | php artisan serve    |
 
@@ -933,7 +949,6 @@ The browser opens automatically.
 portable-laravel-linux/
 ├── php/               Static PHP $PHP_VERSION
 │   ├── bin/php        (statically compiled – no system libs required)
-│   ├── ext/           (shared extensions if any, e.g. xdebug.so)
 │   ├── php.ini        (regenerated at each launch)
 │   └── php.ini.template
 ├── composer/
@@ -1024,42 +1039,6 @@ Kills the artisan serve process and Vite.
 
 ---
 
-## Xdebug Configuration
-
-Xdebug **$XDEBUG_VERSION** is pre-configured and active.
-
-| Setting | Value |
-|---------|-------|
-| Mode | develop, debug, profile |
-| Port | 9003 |
-| Client host | 127.0.0.1 |
-| IDE key | VSCODE |
-| Start with request | yes |
-
-### VSCode Setup
-1. Install **PHP Debug** (xdebug.php-debug)
-2. Open \`app/\` in VSCode
-3. Press **F5** → *Listen for Xdebug*
-4. Set a breakpoint and open http://$SERVER_HOST:$SERVER_PORT
-
-### PHPStorm Setup
-1. Settings → PHP → Debug → Xdebug – port **9003**
-2. Settings → PHP → Servers – add \`$SERVER_HOST:$SERVER_PORT\`
-3. Click the phone icon → start listening
-4. Set a breakpoint and refresh the browser
-
-### Disable Xdebug (for performance)
-\`\`\`bash
-XDEBUG_MODE=off ./run.sh
-\`\`\`
-Or inside \`shell.sh\`:
-\`\`\`bash
-export XDEBUG_MODE=off
-composer install
-\`\`\`
-
----
-
 ## Database (SQLite)
 
 Database file: \`database/database.sqlite\`
@@ -1109,13 +1088,6 @@ file php/bin/php
 ldd php/bin/php    # should say "statically linked"
 \`\`\`
 
-### Xdebug not connecting
-\`\`\`bash
-php/bin/php -m | grep -i xdebug
-\`\`\`
-If missing, check \`logs/php_errors.log\`.
-Verify port 9003 is not blocked: \`ss -tlnp | grep 9003\`
-
 ### npm / Vite issues
 \`\`\`bash
 rm -rf app/node_modules
@@ -1144,12 +1116,12 @@ Edit \`PHP_MINOR\` in \`build-linux.sh\` and re-run it with \`--force\`.
 
 ## PHP Extensions
 
-Compiled statically into \`php/bin/php\`:
+Bundled in \`php/bin/php\` (pre-built static binary from dl.static-php.dev):
 
-bcmath, bz2, calendar, ctype, curl, date, dom, exif, fileinfo, filter, ftp, gd, gettext,
-hash, iconv, intl, mbstring, mysqli, openssl, pcntl, pcre, PDO, pdo_mysql, pdo_sqlite,
-Phar, posix, random, readline, Reflection, session, SimpleXML, sockets, sodium, SPL,
-sqlite3, tokenizer, xml, xmlreader, xmlwriter, zip, zlib, **OPcache**, **Xdebug $XDEBUG_VERSION**
+bcmath, bz2, calendar, ctype, curl, dom, exif, fileinfo, filter, ftp, gd, gmp,
+iconv, mbstring, mysqlnd, openssl, pcntl, pdo, pdo_mysql, pdo_sqlite, pgsql,
+pdo_pgsql, phar, posix, session, redis, simplexml, soap, sockets, sqlite3,
+tokenizer, xml, xmlreader, xmlwriter, zip, zlib, **OPcache**
 
 ---
 
@@ -1173,22 +1145,19 @@ write_manifest() {
     "build_date":   "$(date -u +%Y-%m-%d)",
     "build_tool":   "build-linux.sh",
     "server":       { "type": "php-artisan-serve", "host": "$SERVER_HOST", "port": $SERVER_PORT },
-    "xdebug_port":  9003,
-    "ide_key":      "VSCODE",
     "components": {
-        "php":      { "version": "$PHP_VERSION",      "type": "static-cli" },
-        "xdebug":   { "version": "$XDEBUG_VERSION" },
+        "php":      { "version": "$PHP_VERSION", "type": "static-cli", "source": "dl.static-php.dev" },
         "composer": { "version": "$COMPOSER_VERSION" },
-        "nodejs":   { "version": "$NODE_VERSION",     "flavor": "lts" },
+        "nodejs":   { "version": "$NODE_VERSION", "flavor": "lts" },
         "laravel":  { "version": "$LARAVEL_VERSION" }
     },
     "database": { "engine": "sqlite", "path": "database/database.sqlite" },
     "extensions": [
-        "bcmath","bz2","calendar","curl","dom","exif","fileinfo",
-        "ftp","gd","gettext","iconv","intl","mbstring","mysqli",
-        "openssl","pcntl","pdo","pdo_mysql","pdo_sqlite","posix",
-        "readline","sockets","sodium","sqlite3","xml","xmlreader",
-        "xmlwriter","zip","opcache","xdebug"
+        "bcmath","bz2","calendar","ctype","curl","dom","exif","fileinfo",
+        "filter","ftp","gd","gmp","iconv","mbstring","mysqlnd",
+        "openssl","pcntl","pdo","pdo_mysql","pdo_sqlite","pgsql","pdo_pgsql",
+        "phar","posix","session","redis","simplexml","soap","sockets",
+        "sqlite3","tokenizer","xml","xmlreader","xmlwriter","zip","zlib","opcache"
     ]
 }
 MANIFEST
@@ -1214,7 +1183,7 @@ package_dist() {
 # ---------------------------------------------------------------
 # MAIN
 # ---------------------------------------------------------------
-banner "Portable Laravel Linux Distribution Builder v2.1.0"
+banner "Portable Laravel Linux Distribution Builder v2.2.0"
 info "Output:    $DIST"
 info "Archive:   $ARCHIVE"
 info "Dev tools: $INCLUDE_DEV_TOOLS"
