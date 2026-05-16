@@ -1,6 +1,14 @@
 # Portable Laravel
 
 <div align="center">
+
+🇺🇸 [English](#-english) · 🇧🇷 [Brasileiro](#-brasileiro)
+
+</div>
+
+---
+
+<div align="center">
   <img src="mascot.svg" width="180" alt="Portaravel mascot – a cheerful red door on wheels holding a terminal"/>
 </div>
 
@@ -15,19 +23,10 @@ No compilers, no root, no system packages — just `curl` and `tar`.
 
 ---
 
-### One-liner install & run
-
-**Linux:**
-```bash
-curl -fsSL https://github.com/ensismoebius/portaravel/releases/latest/download/portable-laravel-linux.tar.gz | tar -xz && cd portable-laravel-linux && ./run.sh
-```
-
-**Windows (PowerShell):**
-```powershell
-irm https://github.com/ensismoebius/portaravel/releases/latest/download/portable-laravel-windows.zip -OutFile pl.zip; Expand-Archive pl.zip -DestinationPath .; cd portable-laravel-windows; .\run.bat
-```
-
----
+<!-- ================================================================== -->
+<a id="-english"></a>
+## 🇺🇸 English
+<!-- ================================================================== -->
 
 ## Table of Contents
 
@@ -53,6 +52,20 @@ irm https://github.com/ensismoebius/portaravel/releases/latest/download/portable
   - [Troubleshooting](#troubleshooting-windows)
   - [Updating](#updating-windows)
 - [Comparative](#comparative)
+
+---
+
+### One-liner install & run
+
+**Linux:**
+```bash
+curl -fsSL https://github.com/ensismoebius/portaravel/releases/latest/download/portable-laravel-linux.tar.gz | tar -xz && cd portable-laravel-linux && ./run.sh
+```
+
+**Windows (PowerShell):**
+```powershell
+irm https://github.com/ensismoebius/portaravel/releases/latest/download/portable-laravel-windows.zip -OutFile pl.zip; Expand-Archive pl.zip -DestinationPath .; cd portable-laravel-windows; .\run.bat
+```
 
 ---
 
@@ -83,7 +96,7 @@ Server starts on **http://127.0.0.1:8080** and the browser opens automatically.
 **Clone and run:**
 
 ```bash
-git clone https://github.com/your-user/portaravel.git
+git clone https://github.com/ensismoebius/portaravel.git
 cd portaravel
 chmod +x build-linux.sh
 ./build-linux.sh
@@ -277,7 +290,7 @@ Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 **Clone and run:**
 
 ```powershell
-git clone https://github.com/your-user/portaravel.git
+git clone https://github.com/ensismoebius/portaravel.git
 cd portaravel
 .\build-windows.ps1
 ```
@@ -454,3 +467,458 @@ Download matching Xdebug DLL from https://xdebug.org, place in `php\ext\php_xdeb
 ---
 
 *Linux: `build-linux.sh` · Windows: `build-windows.ps1`*
+
+[🔝 Voltar ao topo / Back to top](#portable-laravel)
+
+---
+
+<!-- ================================================================== -->
+<a id="-brasileiro"></a>
+## 🇧🇷 Português (Brasil)
+<!-- ================================================================== -->
+
+## Índice
+
+- [Instalação e execução em uma linha](#instalação-e-execução-em-uma-linha)
+- [Linux](#linux-pt)
+  - [Início Rápido](#início-rápido)
+  - [Compilando o Projeto](#compilando-o-projeto-linux)
+  - [Estrutura de Diretórios](#estrutura-de-diretórios-linux)
+  - [Scripts de Inicialização](#scripts-de-inicialização-linux)
+  - [Vite / HMR](#vite--hmr-linux-1)
+  - [Banco de Dados](#banco-de-dados-linux)
+  - [Extensões PHP](#extensões-php-linux)
+  - [Resolução de Problemas](#resolução-de-problemas-linux)
+  - [Atualizando](#atualizando-linux)
+- [Windows](#windows-pt)
+  - [Início Rápido](#início-rápido-1)
+  - [Compilando o Projeto](#compilando-o-projeto-windows)
+  - [Estrutura de Diretórios](#estrutura-de-diretórios-windows)
+  - [Scripts de Inicialização](#scripts-de-inicialização-windows)
+  - [Vite / HMR](#vite--hmr-windows-1)
+  - [Banco de Dados](#banco-de-dados-windows)
+  - [Xdebug](#xdebug-windows-1)
+  - [Resolução de Problemas](#resolução-de-problemas-windows)
+  - [Atualizando](#atualizando-windows)
+- [Comparativo](#comparativo)
+
+---
+
+### Instalação e execução em uma linha
+
+**Linux:**
+```bash
+curl -fsSL https://github.com/ensismoebius/portaravel/releases/latest/download/portable-laravel-linux.tar.gz | tar -xz && cd portable-laravel-linux && ./run.sh
+```
+
+**Windows (PowerShell):**
+```powershell
+irm https://github.com/ensismoebius/portaravel/releases/latest/download/portable-laravel-windows.zip -OutFile pl.zip; Expand-Archive pl.zip -DestinationPath .; cd portable-laravel-windows; .\run.bat
+```
+
+---
+
+<a id="linux-pt"></a>
+
+## Linux
+
+### Início Rápido
+
+```bash
+chmod +x run.sh
+./run.sh
+```
+
+O servidor inicia em **http://127.0.0.1:8080** e o navegador abre automaticamente.
+
+---
+
+### Compilando o Projeto (Linux)
+
+**Pré-requisitos** — sem compiladores, sem root:
+
+| Ferramenta | Finalidade | Instalação |
+|-----------|-----------|-----------|
+| `curl` | baixar PHP, Node, Composer | `apt install curl` / `dnf install curl` / `pacman -S curl` |
+| `tar` | extrair arquivos | geralmente pré-instalado |
+| `gzip` | compressão | geralmente pré-instalado |
+| `git` | resolver caminhos | geralmente pré-instalado |
+
+**Clone e execute:**
+
+```bash
+git clone https://github.com/ensismoebius/portaravel.git
+cd portaravel
+chmod +x build-linux.sh
+./build-linux.sh
+```
+
+Na primeira execução tudo é baixado e armazenado em cache em `dist/_cache/`. Execuções seguintes reutilizam o cache.
+
+**O que o script faz, passo a passo:**
+
+1. Baixa um binário PHP 8.4 CLI estático pré-compilado (`dl.static-php.dev`) — sem compilação local
+2. Baixa o Composer PHAR mais recente (`getcomposer.org`)
+3. Baixa o tarball do Node.js 22 LTS (`nodejs.org`)
+4. Executa `composer create-project laravel/laravel`
+5. Configura o `.env` (SQLite, modo local, URLs corretas)
+6. Executa `npm install` + `npm run build` (assets de produção do Vite)
+7. Gera os scripts de inicialização (`run.sh`, `stop.sh`, `shell.sh`, `vite.sh`, …)
+8. Empacota tudo em `dist/portable-laravel-linux.tar.gz`
+
+**Resultado:**
+
+```
+dist/
+├── _cache/                          ← arquivos baixados (reutilizados na reconstrução)
+├── portable-laravel-linux/          ← diretório da distribuição pronta para uso
+└── portable-laravel-linux.tar.gz    ← arquivo distribuível (~120 MB)
+```
+
+**Opções:**
+
+```bash
+./build-linux.sh --force               # apaga o dist e reconstrói do zero
+./build-linux.sh --skip-package        # não cria o .tar.gz
+./build-linux.sh --include-dev-tools   # instala também Telescope, Debugbar, Pest, Rector
+./build-linux.sh --dist-dir /tmp/out   # define um diretório de saída personalizado
+```
+
+---
+
+### Estrutura de Diretórios (Linux)
+
+```
+portable-laravel-linux/
+├── php/               PHP 8.4.x estático
+│   ├── bin/php        (compilado estaticamente – sem dependências do sistema)
+│   ├── php.ini        (regenerado a cada inicialização a partir do template)
+│   └── php.ini.template
+├── composer/
+│   └── composer.phar
+├── node/              Node.js 22.x LTS
+│   ├── bin/node
+│   ├── bin/npm
+│   └── bin/npx
+├── app/               Aplicação Laravel
+│   ├── .env
+│   ├── vendor/
+│   ├── node_modules/
+│   └── .vscode/
+├── database/
+│   └── database.sqlite
+├── logs/
+├── temp/
+├── _env.sh            (bootstrap de ambiente compartilhado)
+├── run.sh             COMECE AQUI
+├── shell.sh           Shell de desenvolvimento
+├── artisan.sh         Atalho para o Artisan
+├── composer.sh        Atalho para o Composer
+├── npm.sh             Atalho para o npm
+├── vite.sh            Servidor de desenvolvimento Vite
+└── stop.sh            Parar todos os processos
+```
+
+---
+
+### Scripts de Inicialização (Linux)
+
+| Script | Finalidade |
+|--------|-----------|
+| `run.sh` | Inicia Laravel + Vite, executa migrações, abre o navegador |
+| `shell.sh` | Bash interativo com `php`, `composer`, `npm`, `artisan` no PATH |
+| `vite.sh` | Servidor Vite HMR standalone (execute junto com `run.sh`) |
+| `artisan.sh` | Atalho para o Artisan |
+| `composer.sh` | Atalho para o Composer |
+| `npm.sh` | Atalho para o npm |
+| `stop.sh` | Encerra artisan serve (porta 8080) e Vite (porta 5173) |
+
+```bash
+# Porta personalizada
+LARAVEL_PORT=9090 ./run.sh
+
+# Fluxo HMR com dois terminais
+./run.sh       # Terminal 1
+./vite.sh      # Terminal 2
+```
+
+---
+
+### Vite / HMR (Linux)
+
+Os assets de produção são pré-compilados durante a construção (`npm run build`).
+Ao executar `vite.sh`, o arquivo `public/hot` é criado e o Laravel passa automaticamente a usar o servidor de desenvolvimento Vite.
+Ao parar o Vite, o arquivo `public/hot` é removido e o Laravel volta a usar os assets pré-compilados.
+
+---
+
+### Banco de Dados (Linux)
+
+```bash
+./artisan.sh migrate
+./artisan.sh migrate:fresh --seed
+./artisan.sh tinker
+sqlite3 database/database.sqlite    # requer sqlite3 instalado no sistema
+```
+
+O arquivo `app/.vscode/settings.json` possui uma conexão SQLTools pré-configurada.
+
+---
+
+### Extensões PHP (Linux)
+
+Binário estático pré-compilado (linkado com musl, roda em qualquer Linux x86_64):
+
+`bcmath` `bz2` `calendar` `ctype` `curl` `dom` `exif` `fileinfo` `filter` `ftp`
+`gd` `gmp` `iconv` `mbstring` `mysqlnd` `openssl` `pcntl` `pdo` `pdo_mysql`
+`pdo_sqlite` `pgsql` `pdo_pgsql` `phar` `posix` `session` `redis` `simplexml`
+`soap` `sockets` `sqlite3` `tokenizer` `xml` `xmlreader` `xmlwriter` `zip` `zlib` `opcache`
+
+---
+
+### Resolução de Problemas (Linux)
+
+**Porta em uso:**
+```bash
+LARAVEL_PORT=9090 ./run.sh
+```
+
+**Binário PHP não executa:**
+```bash
+chmod +x php/bin/php
+file php/bin/php        # deve exibir "ELF 64-bit … statically linked"
+```
+
+**Problemas com npm / Vite:**
+```bash
+rm -rf app/node_modules
+./npm.sh install --prefix app
+```
+
+**Composer sem memória:** edite `php/php.ini.template`, aumente o `memory_limit`.
+
+---
+
+### Atualizando (Linux)
+
+```bash
+# Composer
+curl -o composer/composer.phar https://getcomposer.org/composer.phar
+
+# Node.js – baixe node-vXX.X.X-linux-x64.tar.gz de nodejs.org e extraia sobre node/
+
+# PHP – edite PHP_MINOR em build-linux.sh e execute novamente com --force
+```
+
+---
+
+<a id="windows-pt"></a>
+
+## Windows
+
+### Início Rápido
+
+```
+Dê dois cliques em  run.bat
+```
+
+O servidor inicia em **http://127.0.0.1:8080** e o navegador abre automaticamente.
+
+---
+
+### Compilando o Projeto (Windows)
+
+**Pré-requisitos:**
+
+- Windows 10/11 x64
+- PowerShell 5.1+ (já incluso no Windows) ou PowerShell 7+
+- Acesso à internet (todos os componentes são baixados automaticamente)
+
+**Permitir execução de scripts** (apenas uma vez, se necessário):
+
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+```
+
+**Clone e execute:**
+
+```powershell
+git clone https://github.com/ensismoebius/portaravel.git
+cd portaravel
+.\build-windows.ps1
+```
+
+**O que é baixado:**
+
+1. PHP 8.4 Thread Safe x64 ZIP (`windows.php.net`)
+2. DLL do Xdebug compatível com a versão do PHP (`xdebug.org`)
+3. Composer PHAR (`getcomposer.org`)
+4. Node.js 22 LTS ZIP (`nodejs.org`)
+5. Laravel via `composer create-project`
+6. Dependências npm + build de produção do Vite
+
+**Resultado:**
+
+```
+dist\
+├── portable-laravel-windows\          ← diretório da distribuição pronta para uso
+└── portable-laravel-windows.zip       ← arquivo distribuível
+```
+
+---
+
+### Estrutura de Diretórios (Windows)
+
+```
+portable-laravel-windows/
+├── php/               PHP 8.4.x Thread Safe x64
+│   ├── php.exe
+│   ├── php.ini        (regenerado a cada inicialização a partir do template)
+│   ├── php.ini.template
+│   └── ext/
+│       └── php_xdebug.dll
+├── composer/
+│   └── composer.phar
+├── node/              Node.js 22.x LTS
+│   ├── node.exe
+│   └── npm.cmd
+├── app/               Aplicação Laravel
+│   ├── .env
+│   ├── vendor/
+│   ├── node_modules/
+│   └── .vscode/
+├── database/
+│   └── database.sqlite
+├── logs/
+├── temp/
+├── _env.bat           (bootstrap de ambiente compartilhado)
+├── run.bat            COMECE AQUI
+├── shell.bat          Shell de desenvolvimento
+├── artisan.bat        Atalho para o Artisan
+├── composer.bat       Atalho para o Composer
+├── npm.bat            Atalho para o npm
+├── vite.bat           Servidor de desenvolvimento Vite
+└── stop.bat           Parar o servidor
+```
+
+---
+
+### Scripts de Inicialização (Windows)
+
+| Script | Finalidade |
+|--------|-----------|
+| `run.bat` | Inicia Laravel + Vite, executa migrações, abre o navegador |
+| `shell.bat` | CMD com todas as ferramentas no PATH |
+| `vite.bat` | Servidor Vite HMR standalone |
+| `artisan.bat` | Atalho para o Artisan |
+| `composer.bat` | Atalho para o Composer |
+| `npm.bat` | Atalho para o npm |
+| `stop.bat` | Encerra o servidor e o Vite por porta |
+
+---
+
+### Vite / HMR (Windows)
+
+Os assets de produção são pré-compilados durante a construção (`npm run build`).
+Ao executar `vite.bat`, o arquivo `public/hot` é criado e o Laravel passa automaticamente a usar o servidor de desenvolvimento Vite.
+Ao parar o Vite, o arquivo `public/hot` é removido e o Laravel volta a usar os assets pré-compilados.
+
+---
+
+### Banco de Dados (Windows)
+
+```cmd
+artisan.bat migrate
+artisan.bat migrate:fresh --seed
+artisan.bat tinker
+```
+
+O arquivo `app/.vscode/settings.json` possui uma conexão SQLTools pré-configurada.
+
+---
+
+### Xdebug (Windows)
+
+Xdebug pré-configurado (3.4.x).
+
+| Configuração | Valor |
+|-------------|-------|
+| Modo | develop, debug, profile |
+| Porta | 9003 |
+| Client | 127.0.0.1 |
+| IDE key | VSCODE |
+
+**VSCode:** instale o *PHP Debug* (`xdebug.php-debug`), abra a pasta `app/`, pressione F5 → *Listen for Xdebug*.
+
+**PHPStorm:** Configurações → PHP → Debug → porta 9003. Adicione o servidor `127.0.0.1:8080`. Clique no ícone de telefone.
+
+**Desativar para melhor desempenho:**
+```cmd
+set XDEBUG_MODE=off && run.bat
+```
+
+---
+
+### Resolução de Problemas (Windows)
+
+**Porta em uso:** edite `_env.bat`, altere `LARAVEL_PORT=8080`.
+
+**Extensão PHP não carrega:**
+```cmd
+shell.bat
+php -m
+```
+Verifique `logs\php_errors.log`.
+
+**Xdebug não conecta:** verifique se a porta 9003 não está bloqueada pelo Firewall do Windows.
+
+**Problemas com npm / Vite:**
+```cmd
+rmdir /s /q app\node_modules
+npm.bat install --prefix app
+```
+
+**Composer sem memória:** edite `php\php.ini.template`, aumente o `memory_limit`.
+
+---
+
+### Atualizando (Windows)
+
+```powershell
+# Composer
+curl -o composer\composer.phar https://getcomposer.org/composer.phar
+```
+
+Node.js — baixe `node-vXX.X.X-win-x64.zip` de https://nodejs.org e extraia sobre `node\`.
+
+PHP — baixe o ZIP PHP TS de https://windows.php.net/download e extraia para `php\`.
+Baixe a DLL correspondente do Xdebug em https://xdebug.org e coloque em `php\ext\php_xdebug.dll`.
+
+---
+
+## Comparativo
+
+| | Linux | Windows |
+|---|---|---|
+| PHP | Binário estático 8.4.x | 8.4.x Thread Safe x64 |
+| Fonte do PHP | dl.static-php.dev (pré-compilado, musl) | windows.php.net |
+| Laravel | 13.x | 12.x |
+| Composer | mais recente | mais recente |
+| Node.js LTS | 22.x | 22.x |
+| Xdebug | — | 3.4.x |
+| Banco de dados | SQLite | SQLite |
+| Servidor | `php artisan serve` | `php artisan serve` |
+| Tempo de build | ~1–2 min | ~3–5 min |
+| Requisitos de build | `curl tar gzip git` | PowerShell 5.1+ |
+| Root / admin | não necessário | não necessário |
+| Arquitetura | x86_64 | x64 |
+| Linkagem PHP | totalmente estático (musl) | baseado em DLL |
+| Roda em | qualquer distro Linux x86_64 | Windows 10/11 |
+
+> O PHP no Linux é linkado com musl e não possui dependências de bibliotecas do sistema host — copie a pasta para qualquer máquina Linux x86_64 e funciona imediatamente.
+
+---
+
+*Linux: `build-linux.sh` · Windows: `build-windows.ps1`*
+
+[🔝 Voltar ao topo / Back to top](#portable-laravel)
